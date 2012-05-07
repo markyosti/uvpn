@@ -7,6 +7,30 @@
 # include <errno.h>
 # include <string>
 
+class ScopedFd {
+ public:
+  ScopedFd(int fd) : fd_(fd) {}
+  ~ScopedFd() {
+    if (fd_ >= 0)
+      close(fd_);
+  }
+
+  bool IsValid() {
+    return fd_ >= 0;
+  }
+
+  int Release() {
+    int fd = fd_;
+    fd_ = -1;
+    return fd;
+  }
+
+  int Get() { return fd_; }
+
+ private:
+  int fd_;
+};
+
 inline int fd_read_once(int fd, char* buffer, int bsize) {
   int r;
   while (1) {
@@ -46,6 +70,5 @@ inline bool fd_write(int fd, const string& buffer) {
 inline bool fd_write(int fd, const char* str) {
   return fd_write(fd, str, strlen(str));
 }
-
 
 #endif /* FD_HELPERS_H */

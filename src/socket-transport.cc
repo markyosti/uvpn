@@ -8,6 +8,7 @@
 #include "socket-transport.h"
 
 #include "dispatcher.h"
+#include "fd-helpers.h"
 
 SocketTransport::SocketTransport(Dispatcher* dispatcher)
     : dispatcher_(dispatcher) {
@@ -19,42 +20,42 @@ SocketTransport::~SocketTransport() {
 BoundChannel* SocketTransport::DatagramConnect(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
-  int fd = socket(address.Family(), SOCK_DGRAM, 0);
-  if (fd < 0) {
+  ScopedFd fd(socket(address.Family(), SOCK_DGRAM, 0));
+  if (fd.IsValid()) {
     LOG_PERROR("cannot create socket");
     return NULL;
   }
 
-  if (connect(fd, address.Data(), address.Size()) != 0) {
+  if (connect(fd.Get(), address.Data(), address.Size()) != 0) {
     LOG_PERROR("connect failed");
     return NULL;
   }
 
-  return new BoundSocket(dispatcher_, fd);
+  return new BoundSocket(dispatcher_, fd.Release());
 }
 
 DatagramChannel* SocketTransport::DatagramListenOn(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
-  int fd = socket(address.Family(), SOCK_DGRAM, 0);
-  if (fd < 0) {
+  ScopedFd fd(socket(address.Family(), SOCK_DGRAM, 0));
+  if (fd.IsValid()) {
     LOG_PERROR("cannot create socket");
     return NULL;
   }
 
-  if (bind(fd, address.Data(), address.Size()) != 0) {
+  if (bind(fd.Get(), address.Data(), address.Size()) != 0) {
     LOG_PERROR("cannot bind");
     return NULL;
   }
 
-  return new DatagramSocket(dispatcher_, fd);
+  return new DatagramSocket(dispatcher_, fd.Release());
 }
 
 BoundChannel* SocketTransport::StreamConnect(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
-  int fd = socket(address.Family(), SOCK_STREAM, 0);
-  if (fd < 0) {
+  ScopedFd fd(socket(address.Family(), SOCK_STREAM, 0));
+  if (fd.Get() < 0) {
     LOG_PERROR("cannot create socket");
     return NULL;
   }
@@ -62,23 +63,24 @@ BoundChannel* SocketTransport::StreamConnect(const Sockaddr& address) {
   // Make socket non blocking!
  
   int enabled = 1;
-  if (setsockopt(fd, SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
+  if (setsockopt(
+      fd.Get(), SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
     LOG_PERROR("cannot set TCP_NODELAY");
   }
 
-  if (connect(fd, address.Data(), address.Size()) != 0) {
+  if (connect(fd.Get(), address.Data(), address.Size()) != 0) {
     LOG_PERROR("connect failed");
     return NULL;
   }
 
-  return new BoundSocket(dispatcher_, fd);
+  return new BoundSocket(dispatcher_, fd.Release());
 }
 
 AcceptingChannel* SocketTransport::StreamListenOn(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
-  int fd = socket(address.Family(), SOCK_STREAM, 0);
-  if (fd < 0) {
+  ScopedFd fd(socket(address.Family(), SOCK_STREAM, 0));
+  if (fd.IsValid()) {
     LOG_PERROR("cannot create socket");
     return false;
   }
@@ -88,38 +90,39 @@ AcceptingChannel* SocketTransport::StreamListenOn(const Sockaddr& address) {
   linger l;
   l.l_onoff = 1;
   l.l_linger = 0;
-  if (setsockopt(fd, SOL_SOCKET, SO_LINGER,
+  if (setsockopt(fd.Get(), SOL_SOCKET, SO_LINGER,
 		 reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
     LOG_PERROR("cannot set SO_LINGER");
   }
 
   // If server crashes and restarts, re-open the socket immediately.
   int reuseaddr = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
+  if (setsockopt(fd.Get(), SOL_SOCKET, SO_REUSEADDR,
 		 reinterpret_cast<char*>(&reuseaddr), sizeof(reuseaddr)) < 0) {
     LOG_PERROR("cannot set SO_REUSEADDR");
   }
 
   int enabled = 1;
-  if (setsockopt(fd, SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
+  if (setsockopt(
+          fd.Get(), SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
     LOG_PERROR("cannot set TCP_NODELAY");
   }
 
   // TODO: change size of SNDBUFFER and RECVBUFFER? all those things
   // should happen automagically.
 
-  if (bind(fd, address.Data(), address.Size()) != 0) {
+  if (bind(fd.Get(), address.Data(), address.Size()) != 0) {
     LOG_PERROR("cannot bind");
     return false;
   }
 
   // TODO: 10? tunable parameter!
-  if (listen(fd, 10) != 0) {
+  if (listen(fd.Get(), 10) != 0) {
     LOG_PERROR("cannot listen");
     return false;
   }
 
-  return new AcceptingSocket(dispatcher_, fd);
+  return new AcceptingSocket(dispatcher_, fd.Release());
 }
 
 SocketTransport::Socket::Socket(Dispatcher* dispatcher, int fd)
