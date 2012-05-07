@@ -10,7 +10,6 @@
 UdbSecretFile::UdbSecretFile(const string& name) 
     : name_(name),
       fd_(-1) {
-  InitLogging();
 }
 
 UdbSecretFile::~UdbSecretFile() {

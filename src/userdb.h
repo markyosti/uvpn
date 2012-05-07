@@ -3,7 +3,6 @@
 
 # include "base.h"
 # include "password.h"
-# include "logging.h"
 
 # include <map>
 # include <string>
@@ -52,7 +51,7 @@ class UserDbSession {
   UserDb* udb_;
 };
 
-class UdbSecretFile : public UserDb, virtual public WithLogging {
+class UdbSecretFile : public UserDb {
   static const int kBufferSize = 16384;
 
  public:
