@@ -23,8 +23,7 @@ class ClientUdpTranscoder : public ClientTranscoder {
   class Connection : public ClientTranscoder::Connection {
    public:
     Connection(
-        Transport* transport, ClientConnectionManager* manager,
-        const Sockaddr& address);
+        BoundChannel* channel, ClientConnectionManager* manager);
 
     const ConnectionKey& GetKey() const;
 

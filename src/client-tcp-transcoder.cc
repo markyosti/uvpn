@@ -13,7 +13,7 @@ ClientTranscoder::Connection* ClientTcpTranscoder::Connect(
   //  This is asynchronous!
   BoundChannel* channel(transport->StreamConnect(address));
   if (!channel) {
-    // TODO: Handle error? which kind of errors? no resources?
+    LOG_ERROR("could not stream connect");
     return NULL;
   }
 

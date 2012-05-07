@@ -50,7 +50,7 @@ class ServerTranscoder {
 
   ServerTranscoder() {}
   virtual ~ServerTranscoder() {}
-  virtual void Start() = 0;
+  virtual bool Start() = 0;
 };
 
 #endif /* SERVER_TRANSCODER_H */

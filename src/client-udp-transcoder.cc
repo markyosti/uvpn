@@ -6,14 +6,19 @@
 ClientTranscoder::Connection* ClientUdpTranscoder::Connect(
     Transport* transport, ClientConnectionManager* manager,
     const Sockaddr& address) {
-  return new Connection(transport, manager, address);
+  BoundChannel* socket = transport->DatagramConnect(address);
+  if (!socket) {
+    LOG_ERROR("could not datagram connect");
+    return NULL;
+  }
+
+  return new Connection(socket, manager);
 }
 
 ClientUdpTranscoder::Connection::Connection(
-    Transport* transport, ClientConnectionManager* manager,
-    const Sockaddr& address)
+    BoundChannel* socket, ClientConnectionManager* manager)
     : key_(this),
-      socket_(transport->DatagramConnect(address)),
+      socket_(socket),
       manager_(manager),
       server_read_handler_(bind(&ClientUdpTranscoder::Connection::HandleRead, this)),
       server_write_handler_(bind(&ClientUdpTranscoder::Connection::HandleWrite, this)) {

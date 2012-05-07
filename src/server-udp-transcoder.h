@@ -19,7 +19,7 @@ class ServerUdpTranscoder : public ServerTranscoder {
       Dispatcher* dispatcher, Transport* transport, const Sockaddr& address,
       ServerConnectionManager* manager);
 
-  void Start();
+  bool Start();
 
  private:
   class Connection : public ServerTranscoder::Connection {

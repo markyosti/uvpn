@@ -20,7 +20,7 @@ class ServerTcpTranscoder : public ServerTranscoder {
       Transport* transport, const Sockaddr& address,
       ServerConnectionManager* manager);
 
-  void Start();
+  bool Start();
 
  private:
   class Connection : public ServerTranscoder::Connection {

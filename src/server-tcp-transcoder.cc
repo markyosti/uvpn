@@ -12,11 +12,17 @@ ServerTcpTranscoder::ServerTcpTranscoder(
       address_(address) {
 }
 
-void ServerTcpTranscoder::Start() {
+bool ServerTcpTranscoder::Start() {
   LOG_DEBUG("server-tcp-transcoder, %s", address_.AsString().c_str());
 
   socket_.reset(transport_->StreamListenOn(address_));
+  if (!socket_.get()) {
+    LOG_ERROR("could not listen on streaming socket");
+    return false;
+  }
+
   socket_->WantConnection(&client_connect_handler_);
+  return true;
 }
 
 AcceptingChannel::processing_state_e ServerTcpTranscoder::HandleConnection() {
@@ -28,7 +34,6 @@ AcceptingChannel::processing_state_e ServerTcpTranscoder::HandleConnection() {
   LOG_DEBUG("accepted new connection");
 
   Connection* connection = new Connection(channel, manager_);
-
   // TODO: track connections somewhere.
   return AcceptingChannel::MORE;
 }

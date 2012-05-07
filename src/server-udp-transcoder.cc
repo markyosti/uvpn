@@ -13,12 +13,18 @@ ServerUdpTranscoder::ServerUdpTranscoder(
       address_(address) {
 }
 
-void ServerUdpTranscoder::Start() {
+bool ServerUdpTranscoder::Start() {
   LOG_DEBUG("server-udp-transcoder, %s", address_.AsString().c_str());
 
   socket_.reset(transport_->DatagramListenOn(address_));
+  if (!socket_.get()) {
+    LOG_ERROR("could not listen on datagram socket");
+    return false;
+  }
+
   queue_.SetChannel(socket_.get());
   socket_->WantRead(&client_connect_handler_);
+  return true;
 }
 
 void ServerUdpTranscoder::HandleError(
