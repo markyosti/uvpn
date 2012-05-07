@@ -57,7 +57,7 @@ class SockaddrBase : public Sockaddr {
 
 class LocalSockaddr : public SockaddrBase<sockaddr_un, const char*> {
  public:
-  LocalSockaddr() {}
+  LocalSockaddr() { address_.sun_family = AF_LOCAL; }
   LocalSockaddr(const sockaddr& sockaddr, const socklen_t size)
     : SockaddrBase<sockaddr_un, const char*>(sockaddr, size) {
   }

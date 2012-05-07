@@ -88,11 +88,13 @@ LocalSockaddr* LocalSockaddr::Parse(const char* path) {
 
 LocalSockaddr::LocalSockaddr(const char* path) {
   strncpy(address_.sun_path, path, sizeof(address_.sun_path));
+  address_.sun_family = AF_LOCAL;
   address_.sun_path[sizeof(address_.sun_path) - 1] = '\0';
 }
 
 LocalSockaddr::LocalSockaddr(const string& path) {
   size_t length = min(sizeof(address_.sun_path) - 1, path.length());
   memcpy(address_.sun_path, path.data(), length);
+  address_.sun_family = AF_LOCAL;
   address_.sun_path[length] = '\0';
 }
