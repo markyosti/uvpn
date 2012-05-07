@@ -1,0 +1,25 @@
+- uvpn-server or client structure:
+  - start as root [monitor]
+  - fork [configurator], have privileged process in memory to change network tunings.
+  - fork [processor], drop privileges, open the network connection to the remote server.
+    - possibly, run multiple threads for decryption and transcoding, making
+      use of multiple CPUs.
+  - wait for any of the other processes to die or to crash.
+    - if configurator crashes, reload it.
+    - if processor crashes, reload it.
+      Ideally, if processor crashes, all its resources should be freed.
+      configurator should take care of that, but what if configurator
+      crashed before?
+
+    - idea: processor keeps track of its own resources. When it connects
+      to a configurator, it tells it about all the resources that it has.
+    - configurator frees resources when a processor dies.
+
+- controller, commands:
+  - show state of each connection -> processor
+  - show network configs / resources -> processor / configurator
+  - state of processor / configurator -> monitor, processor / configurator
+
+  - show connections -> processor
+  - connect -> processor
+  - listen -> processor
