@@ -14,6 +14,7 @@
 # include <arpa/inet.h>
 # include <sys/types.h>
 # include <sys/socket.h>
+# include <sys/un.h>
 # include <netinet/in.h>
 # include <netinet/ip.h>
 # include <netinet/ip6.h>
@@ -33,15 +34,14 @@ class Sockaddr {
 };
 
 template <typename SOCKADDR, typename ADDRESS>
-class InetSockaddr : public Sockaddr {
+class SockaddrBase : public Sockaddr {
  public:
-  InetSockaddr() {}
-  InetSockaddr(const sockaddr& sockaddr, const socklen_t size) {
+  SockaddrBase() {}
+  SockaddrBase(const sockaddr& sockaddr, const socklen_t size) {
     memcpy(&address_, &sockaddr, size);
   }
 
-  virtual const ADDRESS& Host() const = 0;
-  virtual uint16_t Port() const = 0;
+  virtual ADDRESS Endpoint() const = 0;
 
   const sockaddr* Data() const {
     return reinterpret_cast<const sockaddr*>(&address_);
@@ -55,7 +55,40 @@ class InetSockaddr : public Sockaddr {
   SOCKADDR address_;
 };
 
-class IPv4Sockaddr : public InetSockaddr<sockaddr_in, in_addr> {
+class LocalSockaddr : public SockaddrBase<sockaddr_un, const char*> {
+ public:
+  LocalSockaddr() {}
+  LocalSockaddr(const sockaddr& sockaddr, const socklen_t size)
+    : SockaddrBase<sockaddr_un, const char*>(sockaddr, size) {
+  }
+
+  LocalSockaddr(const char* path);
+  LocalSockaddr(const string& str);
+
+  static LocalSockaddr* Parse(const string& path) {
+    return LocalSockaddr::Parse(path.c_str());
+  }
+
+  static LocalSockaddr* Parse(const char* path);
+
+  virtual sa_family_t Family() const { return address_.sun_family; }
+  const char* Endpoint() const { return address_.sun_path; }
+
+  const string AsString() const { return Endpoint(); }
+};
+
+template <typename SOCKADDR, typename ADDRESS>
+class InetSockaddr : public SockaddrBase<SOCKADDR, ADDRESS> {
+ public:
+  InetSockaddr() {}
+  InetSockaddr(const sockaddr& sockaddr, const socklen_t size)
+    : SockaddrBase<SOCKADDR, ADDRESS>(sockaddr, size) {
+  }
+
+  virtual uint16_t Port() const = 0;
+};
+
+class IPv4Sockaddr : public InetSockaddr<sockaddr_in, const in_addr&> {
  public:
   IPv4Sockaddr() { address_.sin_family = AF_INET; }
   IPv4Sockaddr(in_addr address, uint16_t port) {
@@ -64,19 +97,19 @@ class IPv4Sockaddr : public InetSockaddr<sockaddr_in, in_addr> {
     address_.sin_addr = address;
   }
   IPv4Sockaddr(const sockaddr& sockaddr, const socklen_t socklen)
-      : InetSockaddr<sockaddr_in, in_addr>(sockaddr, socklen) {
+      : InetSockaddr<sockaddr_in, const in_addr&>(sockaddr, socklen) {
   }
 
   static IPv4Sockaddr* Parse(const string& host, uint16_t port);
   static IPv4Sockaddr* Parse(const sockaddr& sockaddr, const socklen_t size);
 
   virtual sa_family_t Family() const { return address_.sin_family; }
-  const in_addr& Host() const { return address_.sin_addr; }
+  const in_addr& Endpoint() const { return address_.sin_addr; }
   uint16_t Port() const { return ntohs(address_.sin_port); }
 
   const string AsString() const {
     char address[INET_ADDRSTRLEN + 1];
-    inet_ntop(Family(), &Host(), address, Size());
+    inet_ntop(Family(), &Endpoint(), address, Size());
 
     string buffer(address);
     buffer.append(":");
@@ -85,7 +118,7 @@ class IPv4Sockaddr : public InetSockaddr<sockaddr_in, in_addr> {
   }
 };
 
-class IPv6Sockaddr : public InetSockaddr<sockaddr_in6, in6_addr> {
+class IPv6Sockaddr : public InetSockaddr<sockaddr_in6, const in6_addr&> {
  public:
   IPv6Sockaddr() { address_.sin6_family = AF_INET6; }
   IPv6Sockaddr(in6_addr address, uint16_t port) {
@@ -96,19 +129,19 @@ class IPv6Sockaddr : public InetSockaddr<sockaddr_in6, in6_addr> {
   }
 
   IPv6Sockaddr(const sockaddr& sockaddr, const socklen_t socklen)
-      : InetSockaddr<sockaddr_in6, in6_addr>(sockaddr, socklen) {
+      : InetSockaddr<sockaddr_in6, const in6_addr&>(sockaddr, socklen) {
   }
 
   static IPv6Sockaddr* Parse(const string& host, uint16_t port);
   static IPv6Sockaddr* Parse(const sockaddr& sockaddr, const socklen_t size);
 
   virtual sa_family_t Family() const { return address_.sin6_family; }
-  const in6_addr& Host() const { return address_.sin6_addr; }
+  const in6_addr& Endpoint() const { return address_.sin6_addr; }
   uint16_t Port() const { return ntohs(address_.sin6_port); }
 
   const string AsString() const {
     char address[INET6_ADDRSTRLEN + 1];
-    inet_ntop(Family(), &Host(), address, Size());
+    inet_ntop(Family(), &Endpoint(), address, Size());
 
     string buffer("[");
     buffer.append(address);

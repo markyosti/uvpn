@@ -79,3 +79,20 @@ IPv6Sockaddr* IPv6Sockaddr::Parse(const string& address, uint16_t port) {
 
   return new IPv6Sockaddr(inaddr, port);
 }
+
+LocalSockaddr* LocalSockaddr::Parse(const char* path) {
+  if (strlen(path) >= sizeof(((sockaddr_un*)(0))->sun_path))
+    return NULL;
+  return new LocalSockaddr(path);
+}
+
+LocalSockaddr::LocalSockaddr(const char* path) {
+  strncpy(address_.sun_path, path, sizeof(address_.sun_path));
+  address_.sun_path[sizeof(address_.sun_path) - 1] = '\0';
+}
+
+LocalSockaddr::LocalSockaddr(const string& path) {
+  size_t length = min(sizeof(address_.sun_path) - 1, path.length());
+  memcpy(address_.sun_path, path.data(), length);
+  address_.sun_path[length] = '\0';
+}
