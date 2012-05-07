@@ -21,7 +21,7 @@ BoundChannel* SocketTransport::DatagramConnect(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
   ScopedFd fd(socket(address.Family(), SOCK_DGRAM, 0));
-  if (fd.IsValid()) {
+  if (!fd.IsValid()) {
     LOG_PERROR("cannot create socket");
     return NULL;
   }
@@ -38,7 +38,7 @@ DatagramChannel* SocketTransport::DatagramListenOn(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
   ScopedFd fd(socket(address.Family(), SOCK_DGRAM, 0));
-  if (fd.IsValid()) {
+  if (!fd.IsValid()) {
     LOG_PERROR("cannot create socket");
     return NULL;
   }
@@ -80,7 +80,7 @@ AcceptingChannel* SocketTransport::StreamListenOn(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
   ScopedFd fd(socket(address.Family(), SOCK_STREAM, 0));
-  if (fd.IsValid()) {
+  if (!fd.IsValid()) {
     LOG_PERROR("cannot create socket");
     return false;
   }
