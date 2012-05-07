@@ -19,51 +19,111 @@ SocketTransport::~SocketTransport() {
 BoundChannel* SocketTransport::DatagramConnect(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
-  BoundSocket* socket(new BoundSocket(dispatcher_, SOCK_DGRAM));
-  socket->ConnectTo(address);
-  return socket;
+  int fd = socket(address.Family(), SOCK_DGRAM, 0);
+  if (fd < 0) {
+    LOG_PERROR("cannot create socket");
+    return NULL;
+  }
+
+  if (connect(fd, address.Data(), address.Size()) != 0) {
+    LOG_PERROR("connect failed");
+    return NULL;
+  }
+
+  return new BoundSocket(dispatcher_, fd);
 }
 
 DatagramChannel* SocketTransport::DatagramListenOn(const Sockaddr& address) {
   LOG_DEBUG("%s", address.AsString().c_str());
 
-  DatagramChannel* socket(new DatagramSocket(dispatcher_));
-  socket->ListenOn(address);
-  return socket;
-}
-
-bool SocketTransport::DatagramSocket::ListenOn(const Sockaddr& address) {
-  // TODO: tcp & udp socket should share the code here.
-
-  int fd = socket(address.Family(), type_, 0);
+  int fd = socket(address.Family(), SOCK_DGRAM, 0);
   if (fd < 0) {
-    LOG_FATAL("cannot create socket, %s", strerror(errno));
-    // TODO: what the hell do we do? retry?
+    LOG_PERROR("cannot create socket");
+    return NULL;
   }
 
   if (bind(fd, address.Data(), address.Size()) != 0) {
-    LOG_FATAL("cannot bind socket, %s", strerror(errno));
-    // TODO: what the hell do we do here?
+    LOG_PERROR("cannot bind");
+    return NULL;
   }
 
-  SetFd(fd);
-  return true;
+  return new DatagramSocket(dispatcher_, fd);
 }
 
 BoundChannel* SocketTransport::StreamConnect(const Sockaddr& address) {
-  BoundChannel* socket(new BoundSocket(dispatcher_, SOCK_STREAM));
-  socket->ConnectTo(address);
-  return socket;
+  LOG_DEBUG("%s", address.AsString().c_str());
+
+  int fd = socket(address.Family(), SOCK_STREAM, 0);
+  if (fd < 0) {
+    LOG_PERROR("cannot create socket");
+    return NULL;
+  }
+
+  // Make socket non blocking!
+ 
+  int enabled = 1;
+  if (setsockopt(fd, SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
+    LOG_PERROR("cannot set TCP_NODELAY");
+  }
+
+  if (connect(fd, address.Data(), address.Size()) != 0) {
+    LOG_PERROR("connect failed");
+    return NULL;
+  }
+
+  return new BoundSocket(dispatcher_, fd);
 }
 
 AcceptingChannel* SocketTransport::StreamListenOn(const Sockaddr& address) {
-  AcceptingChannel* socket(new Socket(dispatcher_, SOCK_STREAM));
-  socket->ListenOn(address);
-  return socket;
+  LOG_DEBUG("%s", address.AsString().c_str());
+
+  int fd = socket(address.Family(), SOCK_STREAM, 0);
+  if (fd < 0) {
+    LOG_PERROR("cannot create socket");
+    return false;
+  }
+
+  // Don't keep lingering data around when we close the socket, close it
+  // immediately, violently and for real.
+  linger l;
+  l.l_onoff = 1;
+  l.l_linger = 0;
+  if (setsockopt(fd, SOL_SOCKET, SO_LINGER,
+		 reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
+    LOG_PERROR("cannot set SO_LINGER");
+  }
+
+  // If server crashes and restarts, re-open the socket immediately.
+  int reuseaddr = 1;
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
+		 reinterpret_cast<char*>(&reuseaddr), sizeof(reuseaddr)) < 0) {
+    LOG_PERROR("cannot set SO_REUSEADDR");
+  }
+
+  int enabled = 1;
+  if (setsockopt(fd, SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
+    LOG_PERROR("cannot set TCP_NODELAY");
+  }
+
+  // TODO: change size of SNDBUFFER and RECVBUFFER? all those things
+  // should happen automagically.
+
+  if (bind(fd, address.Data(), address.Size()) != 0) {
+    LOG_PERROR("cannot bind");
+    return false;
+  }
+
+  // TODO: 10? tunable parameter!
+  if (listen(fd, 10) != 0) {
+    LOG_PERROR("cannot listen");
+    return false;
+  }
+
+  return new AcceptingSocket(dispatcher_, fd);
 }
 
-SocketTransport::Socket::Socket(Dispatcher* dispatcher, int type)
-  : fd_(-1), type_(type), dispatcher_(dispatcher),
+SocketTransport::Socket::Socket(Dispatcher* dispatcher, int fd)
+  : dispatcher_(dispatcher), fd_(fd),
     read_handler_(bind(&SocketTransport::Socket::HandleRead, this)),
     write_handler_(bind(&SocketTransport::Socket::HandleWrite, this)),
     read_callback_(NULL), write_callback_(NULL),
@@ -79,7 +139,8 @@ void SocketTransport::Socket::Close() {
   SetFd(-1);
 }
 
-BoundChannel* SocketTransport::Socket::AcceptConnection(Sockaddr** address) {
+BoundChannel* SocketTransport::AcceptingSocket::AcceptConnection(
+    Sockaddr** address) {
   LOG_DEBUG();
 
   sockaddr_storage client;
@@ -87,7 +148,7 @@ BoundChannel* SocketTransport::Socket::AcceptConnection(Sockaddr** address) {
 
   int fd;
   while (1) {
-    fd = accept(fd_, reinterpret_cast<sockaddr*>(&client), &client_size);
+    fd = accept(GetFd(), reinterpret_cast<sockaddr*>(&client), &client_size);
     if (fd >= 0)
       break;
 
@@ -95,90 +156,13 @@ BoundChannel* SocketTransport::Socket::AcceptConnection(Sockaddr** address) {
       return NULL;
   }
 
-  BoundSocket* retval = new BoundSocket(dispatcher_, type_);
-  retval->SetFd(fd);
-
+  BoundSocket* retval = new BoundSocket(dispatcher_, fd);
   if (address) {
     *address = Sockaddr::Parse(
         *reinterpret_cast<sockaddr*>(&client), client_size);
   }
 
   return retval;
-}
-
-bool SocketTransport::Socket::ConnectTo(const Sockaddr& address) {
-  LOG_DEBUG("%s", address.AsString().c_str());
-
-  // TODO: for tcp sockets, we need to be non blocking!
-  //       read the connect man page, and check SO_ERROR!
-
-  int fd = socket(address.Family(), type_, 0);
-  if (fd < 0) {
-    LOG_DEBUG("cannot create socket, %s", strerror(errno));
-    // TODO: what the hell do we do? retry?
-  }
-  if (connect(fd, address.Data(), address.Size()) != 0) {
-    LOG_DEBUG("cannot connect socket, %s", strerror(errno));
-    // TODO: what the hell do we do here?
-  }
-
-  int enabled = 1;
-  if (setsockopt(fd, SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
-    LOG_ERROR("cannot set TCP_NODELAY");
-  }
-
-  SetFd(fd);
-  return true;
-}
-
-bool SocketTransport::Socket::ListenOn(const Sockaddr& address) {
-  LOG_DEBUG("%s", address.AsString().c_str());
-
-  int fd = socket(address.Family(), type_, 0);
-  if (fd < 0) {
-    LOG_FATAL("cannot create socket, %s", strerror(errno));
-    // TODO: what the hell do we do? retry?
-  }
-
-  if (bind(fd, address.Data(), address.Size()) != 0) {
-    LOG_FATAL("cannot bind socket, %s", strerror(errno));
-    // TODO: what the hell do we do here?
-  }
-
-  // TODO: 10? tunable parameter!
-  if (listen(fd, 10) != 0) {
-    LOG_FATAL("cannot listen, %s", strerror(errno));
-    // TODO: handle error!
-  }
-
-  // Don't keep lingering data around when we close the socket, close it
-  // immediately, violently and for real.
-  linger l;
-  l.l_onoff = 1;
-  l.l_linger = 0;
-  if (setsockopt(fd, SOL_SOCKET, SO_LINGER,
-		 reinterpret_cast<char*>(&l), sizeof(l)) < 0) {
-    LOG_ERROR("cannot set SO_LINGER");
-    // TODO: handle error!
-  }
-
-  // If server crashes and restarts, re-open the socket immediately.
-  int reuseaddr = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
-		 reinterpret_cast<char*>(&reuseaddr), sizeof(reuseaddr)) < 0) {
-    LOG_ERROR("cannot set SO_REUSEADDR");
-  }
-
-  int enabled = 1;
-  if (setsockopt(fd, SOL_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) < 0) {
-    LOG_ERROR("cannot set TCP_NODELAY");
-  }
-
-  // TODO: disable nagle? change size of SNDBUFFER and RECVBUFFER?
-  // all those things should happen automagically.
-
-  SetFd(fd);
-  return true;
 }
 
 void SocketTransport::Socket::SetFd(int fd) {

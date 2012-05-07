@@ -39,11 +39,6 @@ class BaseChannel {
   typedef function<processing_state_e ()> event_handler_t;
 };
 
-class ListeningChannel : virtual public BaseChannel {
- public:
-  virtual bool ListenOn(const Sockaddr& address) = 0;
-};
-
 class WriteChannel : virtual public BaseChannel {
  public:
   virtual void WantWrite(const event_handler_t* callback) = 0;
@@ -68,18 +63,13 @@ class BoundReadChannel : virtual public ReadChannel {
   virtual io_result_e Read(InputCursor* buffer) = 0;
 };
 
-class ConnectingChannel : virtual public BaseChannel {
- public:
-  virtual bool ConnectTo(const Sockaddr& address) = 0;
-};
-
 class BoundChannel : 
-    virtual public ConnectingChannel,
+    virtual public BaseChannel,
     virtual public BoundReadChannel,
     virtual public BoundWriteChannel {
 };
 
-class AcceptingChannel : virtual public ListeningChannel {
+class AcceptingChannel : virtual public BaseChannel {
  public:
   virtual void WantConnection(const event_handler_t* handler) = 0;
   virtual BoundChannel* AcceptConnection(Sockaddr** address) = 0;
@@ -99,7 +89,7 @@ class DatagramWriteChannel : virtual public WriteChannel {
 };
 
 class DatagramChannel
-    : virtual public ListeningChannel,
+    : virtual public BaseChannel,
       virtual public DatagramWriteChannel,
       virtual public DatagramReadChannel {
 };

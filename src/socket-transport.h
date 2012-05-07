@@ -5,8 +5,7 @@
 # include "dispatcher.h"
 # include "macros.h"
 
-class SocketTransport
-    : public Transport {
+class SocketTransport : public Transport {
  public:
   SocketTransport(Dispatcher* dispatcher);
   ~SocketTransport();
@@ -19,41 +18,31 @@ class SocketTransport
 
  private:
   class Socket
-      : virtual public ListeningChannel,
-        virtual public ConnectingChannel,
-        virtual public ReadChannel,
-        virtual public WriteChannel,
-        virtual public AcceptingChannel {
+      : virtual public ReadChannel,
+        virtual public WriteChannel {
    public:
-    Socket(Dispatcher* dispatcher, int type);
+    Socket(Dispatcher* dispatcher, int fd);
     virtual ~Socket();
 
     void WantRead(const BaseChannel::event_handler_t* callback);
     void WantWrite(const BaseChannel::event_handler_t* callback);
-    void WantConnection(const BaseChannel::event_handler_t* callback) {
-      WantRead(callback);
-    }
 
     void Close();
-
-    virtual bool ListenOn(const Sockaddr& address);
-    virtual bool ConnectTo(const Sockaddr& address);
-
-    BoundChannel* AcceptConnection(Sockaddr** address);
 
    protected:
     io_result_e Write(OutputCursor* buffer, const Sockaddr* remote);
     io_result_e Read(InputCursor* buffer, Sockaddr** remote);
 
     void SetFd(int fd);
-    int fd_;
-    int type_;
+    int GetFd() { return fd_; }
+
+    Dispatcher* dispatcher_;
 
    private:
     void HandleRead();
     void HandleWrite();
 
-    Dispatcher* dispatcher_;
+    int fd_;
 
     Dispatcher::event_handler_t read_handler_;
     Dispatcher::event_handler_t write_handler_;
@@ -65,12 +54,21 @@ class SocketTransport
     int pending_reads_;
   };
 
+  class AcceptingSocket : virtual public AcceptingChannel, public Socket {
+   public:
+    AcceptingSocket(Dispatcher* dispatcher, int fd) : Socket(dispatcher, fd) {}
+    virtual ~AcceptingSocket() {}
+
+    void WantConnection(const BaseChannel::event_handler_t* callback) {
+      WantRead(callback);
+    }
+    BoundChannel* AcceptConnection(Sockaddr** address);
+  };
+
   class DatagramSocket : virtual public DatagramChannel, public Socket {
    public:
-    DatagramSocket(Dispatcher* dispatcher) : Socket(dispatcher, SOCK_DGRAM) {}
+    DatagramSocket(Dispatcher* dispatcher, int fd) : Socket(dispatcher, fd) {}
     virtual ~DatagramSocket() {}
-
-    virtual bool ListenOn(const Sockaddr& address);
 
     virtual io_result_e Write(OutputCursor* buffer, const Sockaddr& remote) {
       return Socket::Write(buffer, &remote);
@@ -81,11 +79,9 @@ class SocketTransport
     }
   };
 
-  class BoundSocket : public Socket, virtual public BoundChannel {
+  class BoundSocket : virtual public BoundChannel, public Socket {
    public:
-    BoundSocket(Dispatcher* dispatcher, int type)
-	: Socket(dispatcher, type) {
-    }
+    BoundSocket(Dispatcher* dispatcher, int fd) : Socket(dispatcher, fd) {}
 
     virtual io_result_e Read(InputCursor* buffer) {
       return Socket::Read(buffer, NULL);
