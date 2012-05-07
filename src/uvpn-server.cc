@@ -60,6 +60,8 @@ int main(int argc, char** argv) {
       &dispatcher, &socket_api, *listen, &manager);
   ServerTcpTranscoder t_tcp(&socket_api, *listen, &manager);
 
+  // TODO: both Start() can return errors. We should probably let the
+  // manager handle starting the transcoders.
   t_udp.Start();
   t_tcp.Start();
   dispatcher.Start();

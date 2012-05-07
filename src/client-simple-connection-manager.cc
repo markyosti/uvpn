@@ -64,6 +64,9 @@ void ClientSimpleConnectionManager::Connect(
   // with).
   ClientTranscoder::Connection* connection = transcoder_->Connect(
       transport_.get(), this, *(sockaddr.get()));
+  if (!connection) {
+    // TODO: handle errors! what do we do here?
+  }
 
   // Create a new authentication session.
   Session* session(new Session(
