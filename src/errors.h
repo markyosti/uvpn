@@ -4,9 +4,22 @@
 # include <stdlib.h>
 # include <stdarg.h>
 # include <stdio.h>
+# include <errno.h>
+# include <string.h>
 
 # include "macros.h"
 # include "backtrace.h"
+
+class PErrorSeverity {
+ public:
+  inline void operator()(
+      const char* file, int line, const char* function,
+      const char* format, const va_list& arg) const {
+    printf("%s:%d %s ", file, line, function);
+    vprintf(format, arg);
+    printf(" - [%d:%s]\n", errno, strerror(errno));
+  }
+};
 
 class ErrorSeverity {
  public:
@@ -97,7 +110,7 @@ inline void DiscardMessage(const char* message, ...) {
 
 # define LOG_INFO PRINT_MESSAGE(ErrorSeverity, ErrorSeverity())
 # define LOG_ERROR PRINT_MESSAGE(ErrorSeverity, ErrorSeverity())
-# define LOG_PERROR PRINT_MESSAGE(ErrorSeverity, ErrorSeverity())
+# define LOG_PERROR PRINT_MESSAGE(PErrorSeverity, PErrorSeverity())
 # define LOG_FATAL PRINT_MESSAGE(FatalSeverity, FatalSeverity("FATAL ERROR"))
 
 # define DEBUG_FATAL_UNLESS(condition) PRINT_MESSAGE(AssertSeverity, AssertSeverity(condition, #condition))
