@@ -1,0 +1,205 @@
+- we have a series of groups
+- each group is made of a list of users
+
+Objectives:
+  - providers should not be able to filter groups out.
+  - identifying an user must be really hard
+  - as much as knowing which groups each user is
+    subscribed to.
+
+Client behavior:
+  - client connects
+  - needs to:
+    - fetch all new messages for groups the
+      user is interested into.
+    - send all new messages from the user.
+
+A simple approach:
+  - each message has a group identifier
+  - servers receive those messages
+  - route them to other servers
+
+
+Questions:
+  - how to scale this up:
+    - number of users
+    - number of groups
+
+  - Currently, nntp basically allows servers
+    to subscribe to particular groups, and to
+    keep x days of messages at most per group.
+    This is how it's made to scale.
+
+Problems:
+  - we don't want ISPs (or anyone else)
+    being able to filter which groups are
+    given to their users and which aren't.
+  - having messages, even if encrypted,
+    identified by a group id easily allow
+    for that.
+
+Scaling issues:
+  - if providers cannot choose which groups,
+    how do they control resources they're using?
+  - days? they need at least a dimension on
+    which they can scale.
+
+Ideas:
+  - multicast like? eg, propagate some sort
+    of group membership idea upstream, creating
+    a sort of network of servers exchanging
+    data for that group?
+
+  - some sort of group identifier, to control
+    propagation of messages, but that cannot control
+    which group a message is in.
+
+  - don't work per group at all, work per users.
+    but then, how do you scale the system? do we
+    introduce a concept of user's home?
+
+Also...
+  - the internet is moving away from protocols,
+    where isps run servers.
+  - isps give connectivity. It's then up to the
+    user to use a particular service.
+
+Maybe this is how the system should be structured
+instead? eg, an entity that controls a set of
+servers that speak this protocol?
+
+but then this system would be:
+  1 - under constant attack from authorities
+      both financially and legally?
+  2 - how to buy trust from users?
+
+Also.. the thing needs a business model.
+Without making money, this cannot survive.
+
+Will it survive if it gets hundreds of thousands
+of users? possibly.
+
+
+
+CONFIGURING INTERFACES
+======================
+- what do others do?
+  - vtun / openvpn / ... most others I checked, just run commands.
+
+- what do we need to do:
+  - when a new tun device is brought up on the server, we should
+    assign it a new address.
+  - same thing on the client. on the client, we should also configure
+    the default gateway accordingly.
+
+- for ipv4:
+  - we need to assign the client a 172.20 ... address, and nat it.
+    (most likely - but it's not granted, eg, we could assign it an
+    address within a network, and just route it, but those are
+    the two alternatives).
+
+- for ipv6
+  - we need to assign the client a new address.
+
+What would be easy to do from c:
+  - setup an address for the tun device on the server side.
+  - setup an address for the device on the client side?
+    not sure, it's point to point after all.
+
+  - problem:
+    - on server, we need to update the routing table,
+      when client is connected.
+      (really? only for tun tap. If we were proxying, for
+       example, we wouldn't need that, or if we were port
+       forwarding, for example).
+    - on client, 
+
+There's generally two setups that are performed:
+  1 - where everything is vpned:
+      - /32 pointing to remote host through gateway is
+        added to routing table.
+      - default gateway is pointed to the tun/tap device.
+  2 - where vpn provides access to a few specific networks.
+      - /whatever is added to the routing table.
+  
+APIs:
+http://msdn.microsoft.com/en-us/library/Aa366073
+http://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man4/route.4.html#//apple_ref/doc/man/4/route
+http://msdn.microsoft.com/library/en-us/winsock/winsock/porting_socket_applications_to_winsock.asp
+
+How does it work currently:
+  - a protector generator is created
+  - ServerTcpTranscoder is created. It knows about the dispatcher, the SocketTransport,
+    and the protector.
+  - Authenticator is created, it gets the channel connectionion callback.
+  - the transcoder is started, it gets the authenticator callback.
+
+Life of a connection:
+  - transcoder.Start() -> calls listen().
+    connection received -> transcoder invokes authenticator->ConnectCallback(), gives it a ServerTranscoderSession
+    authenticator does its business with the transcoder -> invokes channel->ConnectCallback(), gives it a ServerTranscoderSession
+
+Future life of a connection:
+  - transcoder.Start() -> calls listen()
+    connection received -> transcoder creates a Connection objet, transcoder tries to retrieve session from ConnectionManager, GetSession.
+    ConnectionManager checks its internal tables. If connection is known, done. If connection is not known...
+       ... calls authenticator, giving it the connection as parameter. The authenticator does its business in
+           authenticating the connection.
+       ... and finally calls the callback provided by the connectionmanager. 
+       ... connection manager invokes the io channel, with an authenticated session (no connection).
+           ... channel provides callbacks for the connection manager.
+
+
+Encryption models:
+
+- user opens any kind of channel
+- performs authentication, a key is computed, now, we can have:
+  - channel encryption
+    - the cipher is tied to each channel, it has a different state
+      for each channel, can be different for each channel.
+      - this makes it possible to use ecb and similar per channel,
+        as the next block will continue the previous one? only for
+	tcp, and not other means.
+      - this makes it harder to multiplex sessions by different users
+        on the same channel, as encryption is tied to the channel.
+      - if we introduce means to have uvpn routers, we need to open
+        secure channels from one server to another? and route messages
+	in clear text?
+
+  - session encryption
+    - the cipher is tied to the session with the user.
+    - each channel will use the same cipher, with same key and same
+      state.
+
+
+Error handling:
+- when HandleError is called, we need to:
+  - delete the session
+  - delete the connection
+
+- the main point is that:
+  - the file has to be closed
+  - the file has to be removed from the epoll set
+  - the descriptors have to be removed
+
+- Currently, we have two cases when an error can happen:
+  - inbound path, an Handle* method returns error.
+  - outbound path, SendMessage.
+
+- To implement proxy and socks code:
+  - right now, uvpn is packet based: server receives and
+    decapsulates packets.
+  - to support socks and proxy client side we'd need to turn
+    a socks or proxy request into a stream of packets
+    (eg, tcp/udp connect, ...) and forward this stream to
+    the server.
+  - so.. we need to either:
+    - implement a tcp/ip stack on the proxy / socks code.
+      (eg, turn a GET request into a stream of ip/tcp packets)
+    - find a way to capture the packets the kernel would
+      send out without actually sending them out.
+      (likely, this will require root privileges, and such...)
+    - have the server support the socks/proxy, so cnnection
+      originates from the server.
+    - how does TOR do? 
+     

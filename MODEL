@@ -1,0 +1,157 @@
+Client model:
+  - authenticator is started
+  - authenticator registers callback with transcoder
+  - sends messages back
+  - authenticator invokes io channel
+  - io channel registers callback with transcoder
+
+Server model:
+  2 models in mind:
+
+  - authenticator is started
+  - authenticator waits for new connections with transcoder
+  - connection is established, we need to keep track of
+    sessions on this new connection
+  - authentication is performed, we need to either:
+    - create a tun tap device for the user
+    - or have enough info for the tun/tap device
+      to de-multiplex packets coming from this
+      user.
+  - each user is probably assigned an ip address?
+    - we can filter on that. Otherwise.. we need
+      to keep track of connections? scary.
+      Especially with tap device.
+  - additionally, we want to achieve something generic,
+    where any client can talk with any server.
+    The model where we run a script to do the configuration
+    might be the wrong model, as that binds particular
+    servers to particular clients.
+
+
+Handling incoming connections:
+  - same user, re-using same authentication method,
+    could be coming over multiple transport layers
+    (eg, http get requests, udp packets, ...)
+  - most likely, data from this user over those layers
+    will be encrypted. Unless I keep some cleartext
+    connection identifier. (really? it might well
+    be the only way to identify a connection).
+
+IDEA:
+  - delegate the task of finding a connection to
+    the transcoder.
+
+
+
+Assumptions:
+  - I have two inputs:
+    - tun/tap device, receiving packets from the user
+    - transcoders, receiving replies
+
+  - transcoders will be waiting for input on one or
+    more sockets.
+  - transcoders will have a queue
+
+  - at any given time, there can be one or more
+    transcoder ready to send packets.
+
+Logic:
+  - if a transcoder is ready to transcode and send data,
+    it is waiting in the 'ready' queue.
+
+  - main loop will be waiting for stuff to read on tun/tap
+    device as soon as there are transcoder in the 'ready'
+    queue.
+
+Startup:
+  - IOChannel opens the tun/tap device, ask the Dispatcher
+    to be notified of read events.
+  - whenever a read event arrives, the IOChannel picks a 
+    Transcoder to use to forward the packet.
+  - Transcoder is notified, with SendPacket. Transcoder will
+    ask to be notified of write events on one of its file
+    descriptors, and send the packet when ready.
+  - Transcoder will also listen back for packets on whichever
+    filedescriptor it opened. 
+  - when Transcoder receives any such packet, it will invoke
+    IOChannel and tell it about the packet.
+
+[Dispatcher]
+  - check if there are things in the ready queue.
+  - if tere are things in the ready queue, wait for
+    events on the descriptor of the tun/tap device.
+  - 
+
+Model:
+
+tun/tap ->
+    input / output queue -> interface side
+    input / output queue -> application side
+
+transcoders ->
+    input / output queue -> application side
+    input / output queue -> socket side
+
+// IDEA:
+//   - an IOChannel is 
+class IOChannel {
+};
+
+class AuthChannel
+    : public IOChannel {
+};
+
+
+Players:
+  + IOChannel
+  + Transport
+  + Transcoder
+  + Transcoder::Connection
+  + AuthenticationManager
+  - ConnectionManager
+  - ConnectedSession
+
+Old scheme:
+  - started a single Transcoder. Transcoder opens / registers a channel using
+    a Transport method, so far we only have a socket transport, we could
+    have a socks transport, or proxy transport. When a new connection is
+    received:
+    - a Connection is created
+    - AuthenticationManager connect callback is invoked, with Connection
+      as an argument
+  - AuthenticationManager performs authentication, by registering
+    its own methods as read / write callbacks for the Transcoder.
+  - once authentication is completed, AuthenticationManager invokes the
+    IOChannel connect callback with Connection as an argument.
+  - IOChannel sets its own read / write callbacks in the Connection.
+  - life goes on.
+  
+  Notes:
+    - transcoders are pretty much independent, there is no state sharing
+      between transcoders. Each created Connection is on its own.
+
+New scheme:
+  - There are multiple transcoders.
+    There are multiple transports.
+    There are multiple authentication managers.
+
+    Idea:
+      - we create a ConnectionManager
+      - each Transcoder, when it receives a "packet", asks the
+        ConnectionManager for a ConnectedSession. 
+	- ConnectedSession can:
+	  - send data back, ask for more data.
+	  - can't register a handler, the Connection it gets
+	    is expected to die as soon as the reply is sent.
+
+Transcoders and sessions interactions:
+  principles:
+    - per connection buffering is handled by the transcoder
+      eg, it's up to the transcoder to keep a buffer for
+      a tcp connection or udp connection **
+    - session gets the packet only once a full packet has
+      been decoded
+
+    [**]: udp transcoders can decide that all packets fill
+      one packet at most. Which is a fair assumption.
+

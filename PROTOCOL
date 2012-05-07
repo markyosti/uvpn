@@ -1,0 +1,716 @@
+Let's say we have a server that listens on port 100 udp.
+On this port it can:
+  - receive packets for existing "connections"
+  - receive packets for new connections
+  - receive garbage
+
+If I was implementing a simple non-safe protocol, server side could work
+like this:
+  1 - read packet
+  2 - check srcip + srcport in connection table. Is this a known connection?
+    2.1 - yes, forward packet.
+    2.2 - no, perform authentication.
+  3 - has this much time passed since last time we saw a packet in this connection?
+    3.1 - yes, forget about the connection.
+    3.2 - no, wait longer for packets.
+
+PROBLEM A:
+  - if server ends up in 3.1, but client thinks it's in 3.2 instead
+    (because of packet loss, different timing settings, ...)
+    client will keep sending packets, normal packets, but server
+    will try to perform authentication, and most likely reject
+    the packet as invalid. To recover, an error must be reported to
+    the client, or the client notice that all packets are being
+    discarded, and retry authentication.
+
+    Possible solutions:
+      1 - have an explicit protocol for connection termination, similar to
+        fin, fin+ack, ack. But this will not solve the problem, as the
+	server needs to reclaim resources, and will eventually end up
+	in 3.1 regardless of client terminating connection or not.
+	On average, it will work, though.
+
+      2 - report an error if authentication is expired, at which point
+        client needs to re-authenticate, transparently.
+	Problem: how do we determine that authentication has expired,
+	eg, that packet is part of an expired connection?
+	srcip+srcport is "no longer" in our connection table?
+	If we want to free resources when a connection is gone,
+	it's hard to distinguish the case "no longer in connection
+	table" from "never been in connection table, this is a new
+	connection". So.. back at step 2, a valid flowchart could be:
+	  2 - ... is this a known connection?
+	    2.1 - yes, forward packet.
+	    2.2 - no, is this a valid authentication packet?
+	      2.2.1 - yes, perform authentication.
+	      2.2.2 - no, return error, so client can re-authenticate.
+
+	2.2.2 is necessary, otherwise PROBLEM A persists. Iff we employ
+	this strategy, we must ensure that we're able to answer question
+	2.2, eg, that normal packets cannot normally be mistaken for
+	valid authentication requests. 2.2.2 (PROBLEM A.A) also means
+	that an uvpn server listening over udp will be easy to detect: send probe,
+	wait for error back. But this is not a drawback, previously,
+	we had 'send authentication request', wait for packet back,
+	which lead to same result. If we want to provide a stealth
+	mode, we need to address that separately.
+
+DECISION
+
+A.1 requires lot of code, and doesn't always solve the problem. Makes
+the state machine more complex, and requires re-transmit policies to
+be done seriously. Let's not do it.
+
+A.2 seems reasonable. Only drawback is PROBLEM A.A. Do we need to address
+both cases? it'd be nice if uvpn supported a "stealth mode", so replies
+are only sent back to recognized clients. This, however, means that the client
+needs to somewhat identify itself before any exchange (which implies that
+the client needs to have some sort of secret belonging to the server, or the
+client needs to provide some secret recognized by the server - again, before
+any exchange).
+
+PROBLEM B:
+  - devices doing SNAT will most likely need to mangle with the
+    source port if it has many clients behind it. A source port
+    will be allocated only for a short amount of time, and might
+    change on different packets, depending on how much time we
+    wait between packets.
+
+    - Possible solutions:
+      1 - ignore the issue, nat devices are broken, especially
+          those that can't give us the same srcport for every
+	  packet of the 'same connection'.
+
+      2 - use a connection identifier in the packets, so we can
+          ignore source port + source ip, and just rely on this
+	  connection identifier.
+
+DECISION
+
+B.1 although I don't have hard numbers, we should do our best for
+the connection to be reliable. A.1 is unacceptable.
+
+B.2 using a connection identifier seems ok, at least for protocols
+where one is not available. Additionally, this allows us to have
+multiple connections on the same srcip + srcport, which could
+be useful for proxies and / or gateways that don't want to open
+too many sockets. It also allows us to change srcport + srcip
+dynamically, but still keep the tunnel open (useful for roaming
+clients, for example).
+This solution introduces problem B.A: it's now incredibly easy to
+spoof a connection or inject packets in a connection, and even
+receive packets for that connection. Just send an udp from your
+machine, with the right connection identifier, and if it's
+correct, you'll receive replies. We must be smart in what we use as
+a connection identifier.
+
+PROBLEM B.A
+  - we need to identify which connection a packet is part of
+    by looking at the connection identifier in the packet.
+    This connection identifier MUST meet the following 
+    requirements:
+      R.1 - not require per-client state, at least to point
+        to the right connection. (server must use this identifier
+	to *find* the client state)
+      R.2 - must be reply-attack safe. There are two threats we
+        want to defend against:
+	  - random malicious user, trying to inject packets in the
+	    network behind the uvpn server. (blind attacker).
+	  - gateway, or malicious entity who can observe our
+	    stream, and wants to disrupt it by sending packets
+	    that might cause a reset or overload the server, or
+	    enter our network. (middlemen)
+      R.3 - (general) must not ease the task of identifying
+        uvpn connections for hardware devices.
+      R.4 - (general) be resistant to packet loss. Some packet
+        loss should not break the protocol.
+    All the solutions require having some sort of connection
+    identifier. How it is calculated and how it is used to
+    provide the above properties is the question.
+    - Possible solutions:
+      1 - use a 8 byte random identifier. This is assigned
+          upon successful authentication. Simple, meets
+	  R.1, doesn't meet R.2 and R.3 (a hardware device
+	  could notice lot of packets with same identifier
+	  and block us).
+      2 - change the X byte random identifier "periodically".
+          How do we change it periodically is the question.
+	  Proposals:
+	    1 - server, from time to time, changes the identifier,
+	        and communicates it to the client.
+	        Not useful, and possibly worse: could allow a 
+		malicious user to *steal* the connection forever.
+		Still allows reply attacks, and middlemen to
+		be evil.
+            2 - client, from time to time, changes the identifier,
+	        and communicates it to the server. As above.
+		If client changed identifier on every packet, this
+		would require much more effort for blind attackers
+		to successfully mount an attack. It'd be easy for
+		middlemen to disrupt the connection. Problem:
+		if we loose some packets, ... how do we keep
+		the protocol working? server could keep track of
+		last x good identifiers, and discard an old one
+		only once new one has been used. What about client?
+		it can't know if new identifier has been learned,
+		unless we build reliability in the protocol. So
+		it won't be able to choose the right identifier
+		unless it knows the server has learned it.
+            3 - client and server 'agree' on a set of identifiers
+	        to use. Client always picks next identifier,
+		server checks if identifier is within a window.
+	        If it is, it's valid. Window slides up every
+		time an old identifier is seen.
+		If 'agree' doesn't involve sending over the
+		network the identifiers agreed upon, and finding
+		the next identifier for a 3rd party who can even
+		see the packets is hard, we've found a protocol
+		a that's resistant to middlemen and blind
+		attackers.
+
+DECISION
+
+B.A.1 - is not good enough.
+
+B.A.2.3 - seems good enough.
+
+
+TRIAL
+
+data packet format:
+  8 bytes - CCID - client connection ID
+  8 bytes - SCID - server connection ID
+  [PAYLOAD]
+
+authentication packet format:
+  8 bytes - CCID
+  8 bytes - SCID
+  [SCRAMBLED AUTH DATA]
+
+First exchange:
+  1 - C: CCID=RANDOM, SCID=RANDOM
+  2 - S: check CCID in connection table.
+         Is this a known connection?
+      2.1 - yes, forward packet.
+      2.2 - no, can we successfully decode auth data?
+        2.2.1 - yes, perform authentication.
+	2.2.2 - no, return error, so client can re-authenticate.
+
+  3 - has this much time passed since last time we saw a packet in this connection?
+    3.1 - yes, forget about the connection.
+    3.2 - no, wait longer for packets.
+
+
+Now:
+  - until 2.2.1, there's no secret exchanged between client
+    and server, no mutual authentication. Until such a time
+    as the authentication completes, even if we're using strong
+    cryptography to get some ids, whoever can observe the first
+    packet can predict all the following packets.
+  - what happens after 2.2.1? how do we re-negotiate ids?
+    or do we simply add some sort of hmac for integrity?
+    If we change the CCID and SCID, and we base it on the
+    completed authentication, it's harder for somebody
+    observing the connection to keep track of it.
+    Especially if the transmission method is changed from
+    time to time.
+
+Observations:
+  - we want to support a /stealth mode/. which means: unless
+    you have valid authentication tokens, you can't detected
+    the presence of a server.
+    This basically removes 2.2.2, and requires 2.2.1 to have
+    some sort of pre-authentication for the exchange to take
+    place.
+  - 2.2.1 happens in the clear. Even if we're using something
+    like SRP to perform authentication, a sniffer will see the
+    username of the client, and whatever else is used for the
+    authentication protocol.
+
+Pre-Authentication:
+  - SSL is roughly based on something like:
+    - servers sends his certificate
+    - client sends his certificate
+    - client checks that servers certificate is
+      signed by a trusted authority.
+    - server checks that clients certificate is
+      signed by a trusted authority.
+    [symmetric key exchange, and enjoy]
+  - in stealth mode, server can't send its certificate
+    immediately, it has to prove identity of client first.
+    At the same time, we don't want client to send a
+    certificate in cleartext, as that contains too much
+    data about the client (issuer entity, ...).
+  - also, it'd be nice if for initial handshake, client
+    was actually able to encrypt its data.
+
+Ideas:
+  - let's assume that we have a parameter that says:
+
+    not-stealth-from: 10.0.0./8
+    stealth-from: 0.0.0.0/0
+
+  - or something similar. When in non-stealth mode, server
+    returns its own certificate immediately during handshake.
+
+  - in stealth mode, server assumes that client already has
+    the right certificate.
+
+Let's try one more time:
+
+First exchanges - THIS IS THE CURRENT PROTOCOL!
+
+  1 - client sends either:
+      - WSK.1 packet, <IV (16 bytes?><encrypted payload>
+      - NSK.1 packet, with random 8 bytes.
+  2 - server uses first 8 bytes as CCID, finds no connection.
+  3 - packet, does it have a payload? PROBLEM: for tcp, we don't know
+      the size of the packet unless we can decrypt it. However, we
+      can't decrypt the size unless we know it's WSK or NSK. The following
+      bytes might just be part of the next packet, or might be missing
+      for any random reason. Problem here is that we have no encryption
+      yet, so it's hard to communicate anything, even the size.
+      3.1 - yes, it's WSK.1
+      3.2 - no, it's NSK.1
+  4 - WSK.1:
+      4.1 - parse authentication data, is it valid?
+        4.1.1 - yes, send WSK.2, from now on we expect PEC.1 and PEC.2 packets.
+	4.1.2 - no, send ???? error message back?
+  5 - NSK.1:
+      5.1 - send NSK.2
+
+In stealth mode:
+  - NSK.1 packets are accepted only from some trusted ips. (local network?)
+    or otherwise clients are assumed to have a server key. 5.1 is not performed.
+  - 4.1.2 ignores the error silently, no error sent back. This means that in
+    stealth mode, if a connection "expires", client will be unlikely to
+    re-authenticate. Shall we add some other token, so server knows that
+    despite the SCID being unknown, it's a valid one? unless we find a smart
+    way to do this, it'd be prone to replay attacks. Let's not do this for now.
+
+
+Packet exchange format:
+  PACKET part of an EXISTING CONNECTION:
+    PEC.1 - C->S: CCID (8bytes?) <scramblekey/IV (16bytes?)><encrypted/scrambled payload>
+    PEC.2 - S->C: SCID (8bytes?) <scramblekey/IV (16bytes?)><encrypted/scrambled payload>
+      payload includes:
+	frag 24 bits:
+	  - 8 bit indicating fragment id
+	  - 8 bit indicating fragment number
+	  - 8 bit indicating total number of fragments
+        hmac: including CCID/SCID and payload
+
+  PACKET INITIATING A CONNECTION:
+    WITHOUT SERVER KEY:
+      NSK.1 - C->S: SCID (random 8 bytes, server should be using) +  random data,
+        that will fail decoding with the server key -- THIS CAN BE REPLAYED!
+      NSK.2 - S->C: SCID (8 bytes?) <scramblekey (16 bytes?)><scrambled payload>
+        payload includes:
+	  frag 24 bits: as above
+	  hmac: as above
+	  server key: to use in future handshakes.
+
+    WITH A SERVER KEY:
+      WSK.1 - C->S: <IV (16 bytes?)><encrypted payload> -- THIS CAN BE REPLAYED!
+        payload includes:
+	  frag 24 bits: as above
+	  hmac: including IV
+	  SCID seed: 16 bytes?
+	  initial key: 16 bytes?
+	  <auth>: beginning of authentication
+      WSK.2 - S->C: SCID (8bytes?) <IV (16 bytes)> <encrypted payload>
+        payload includes:
+          frag 24 bits: as above	
+	  hmac: including IV
+	  CCID seed: 16 bytes?
+	  <auth>: authentication response
+      [from now on, it behaves like an established connection, at end of authentication,
+      the symmetric key is replaced]
+
+ERROR HANDLING:
+  SERVER SIDE
+    - PEC.1, errors:
+      PEC.1.EA - unknown connection (CCID is unknown)
+      PEC.1.EB - cannot decode payload.
+    - NSK.1, errors:
+      NSK.1.EA - SCID matches an existing connection.
+    - WSK.1, errors:
+      WSK.1.EA - 8 bytes of IV match an existing connection.
+      WSK.1.EB - cannot decrypt payload.
+
+  ACTION:
+    - 
+
+  CLIENT SIDE
+    - PEC.2, errors:
+      PEC.2.EA - unknown connection (SCID is unknown)
+      PEC.2.EB - cannot decode payload.
+    - NSK.2, errors:
+      NSK.2.EA - unknown connection (SCID is unknown)
+      NSK.2.EB - cannot decrypt payload.
+    - WSK.2, errors:
+      WSK.2.EA - unknown connection (SCID is unknown)
+      WSK.2.EB - cannot decrypt payload
+  
+   *.2.*A errors:
+     - can easily be caused by blind attacker
+   *.2.*B errors:
+     - can easily be caused by middlemen (or succesful
+       blind attacker).
+   both kinds of errors can be caused by corruption
+   in the transport layer.
+   
+   ACTION:
+     *.2.*A: report error to upper and lower layer?
+       lower layer: yes, maybe we're corrupting packets.
+         lower layer should not do anything if the stream
+	 is otherwise successful.
+       upper layer: what can it do? re-send? reliability
+         should not be built into uvpn.
+       DECISION: report error to lower layer, loewr layer
+       needs to be responsible, and make some sort of
+       informed decision to avoid attacks.
+     *.2.*B: consume SCID? if we do so, packet will be
+       lost, and if we get a duplicate packet, we'll end
+       up in *.2.*A. If upper / lower layer do something
+       based on those packets, we're screwed.
+       An attacker might exploit this by sending packets
+       with the right SCID, and wrong crypto content,
+       effectively breaking connectivity.
+       If we don't consume SCID, we might end up unable
+       to decode new packets, which should be ok, given
+       that we're unable to decode them in the first place.
+       DECISION: error 2.*B causes packet to be discarded.
+       SCID is not consumed. Error will be reported to
+       lower layers.
+
+
+Questions I have in mind:
+  - can the CCID/SCID be encrypted?
+    No. Maybe with a, but it's ugly.
+    
+    Problem: server receives a packet, and needs to
+    find the key to decrypt CCID/SCID:
+      a - it can use one key for all packets.
+      b - it can calculate a key based on the hmac
+          of srcip/dstip/srcport/dstport.
+
+    a - it would have to be a public key, of which
+    the server owns the private key. It would require
+    asymmetric encryption for each packet, and a
+    random IV to prevent reply attacks.
+    
+    b - would break one of the assumptions. We want
+    the server to understand that a packet is part
+    of the same connection even though it was received
+    on a different transport.
+
+  - do we really need a CCID + SCID? isn't a CID enough
+    for both? No, we need bidirectional stream communications,
+    and unless CID is a constant, we need one per flow.
+
+  - can't the CID be a constant? just a connection identifier,
+    that client and server exchange?
+
+    Problems:
+      a - if it is encrypted, we run in problems described above.
+      b - if it is in cleartext, others can inject packets in
+          the same 'connection', or reply packets that were
+	  sent previously.
+
+    Can problem b be solved?
+      - rest of packet is encrypted / hmaced, after the CID.
+        attacker can't send arbitrary packets. But those packets
+	will be discarded later in the pipeline.
+      - if we want to avoid reply attacks, we need to add something
+        that would allow the server to tell that this packet is
+        not allowed. Approaches are:
+	  - keep a counter, encrypted. if counter < current window,
+	    discard packet. counter has to be large to be effective,
+	    as it shouldn't be recycled within same connection.
+	    We can't expect counters to be always consumed in sequence
+	    due to packet loss or out of order packets, we'd need
+	    a window, and to increase size and mark counters as used
+	    when we see them.
+
+     So, in short, we have 2 solutions:
+       - have secure random CIDs, managed through connection table.
+         This random must be hmaced, otherwise a 3rd party could stop
+	 our packets, modify what comes after the random, and trick us.
+       - have a constant CID, and an encrypted hmac and counter to
+         verify that 1 - the packet wasn't mangled, and 2 - it is
+	 not being replayed.
+     For now, I like 1 more. Note that both solutions are vulnerable
+     to packet loss, and counters being consumed.
+  
+LAYERING
+
+CURRENTLY
+  - we have 3 players:
+    - io-channel (tun-tap)
+    - authenticator (srp)
+    - transcoder (simple-udp)
+
+  - currently, in client:
+    - main builds all 3 players
+    - main calls authenticator(transcoder)
+    - authenticator sets a protector on the transcoder,
+      does its own business, and eventually authenticates
+      the user.
+    - authenticator calls io-channel(transcoder)
+    - io-channel does its own sort of handshake,
+      using protector.
+    - and then keeps sending and forwarding packets.
+
+  - underneath:
+    - transcoder has to be able to fragment and
+      assemble data. This info has to be encrypted
+      as necessary. Some transcoders will need to
+      add more headers
+      (keep track of latency, and similar)
+    - io-channel might need to add other control data.
+
+I BELIEVE CURRENT MODEL HOLDS on the CLIENT SIDE.
+
+SERVER SIDE, CURRENT MODEL:
+  - Authenticate() method is invoked by uvpn-server. It:
+    - provides a connection callback.
+    - provides a scrambler to be used for unauthenticated
+      sessions.
+  - THIS PREVENTS CHAINING of MULTIPLE METHODS, SO:
+    - the server-udp-transcoder, connection manager, doesn't
+      really need a scrambler to detect if a connection is new or not.
+    - the authenticator needs to setup the CidTracker, as it's
+      the only thing knowing how to deal with CIDs.
+    - and needs to decide if it's a new connection or what.
+  PROPOSAL:
+    - have the server authenticators expose the ConnectCallback.
+    - have the Start method take the next ConnectCallback to invoke.
+    - each authenticator, at end of its handshake, invokes the next
+      ConnectCallback.
+    - last ConnectCallback ... what does it do? sets up the
+      connection? sounds reasonable.
+
+ADDITIONAL NOTES:
+  - plan was to write code to support a single transcoder at a time,
+    and then have a multiplexer/demultiplexer transcoder.
+  - this model seems to work well for the client. Does it work well
+    for the server?
+  - with multiple transcoders, in the server, we have:
+    - transcoders listening directly to the file descriptor.
+    - each transcoder using its own mechanism to encode/decode data.
+    - the higher layer (authenticator, io-channel) that needs to
+      receive data from any channel. But where do they send data
+      through?  Same as where they last received data from? seems
+      suboptimal.
+
+IDEA: ignore the whole issue, even on the server. Each transcoder
+assumes data is coming in and going to a single user/channel.
+At that point, we build the unethical transcoder, that has the
+authenticator callbacks, and uses the connection manager to
+de-multiplex connections per-user.
+
+- SERVER POINT OF VIEW:
+  - it starts with an udp packet.
+  - until authentication is performed.
+  - once authentication is done:
+    - each packet read from the user,
+      needs to be passed to the io-channel
+      through the transcoder.
+    - each packet received from the io-channel
+      needs to be passed back to the user.
+
+- with the fancy transcoder:
+  - there are multiple transcoders underneath
+  - but only one io-channel.
+
+- regardless of the interface, what needs to happen is:
+  - the tun-tap io-channel creates a tap interface.
+  - delivers packets read / written to the transcoder.
+
+- who creates the channel?
+  - needs to be created at end of authentication.
+    authenticators usually do not know when authentication
+    ends, as they just keep calling callbacks.
+  - the transcoder could handle the channel. At which
+    point it would be hard to have a super-transcoder.
+  - the channel could be passed the transcoder session
+    once invoked. It would then be able to setup the
+    transcoder callbacks as necessary.
+
+DECISION
+  - at end of authentication chain, the callback to
+    be invoked is on the io-channel.
+  - the io-channel creates a "session-channel" as well, and
+    sets the callbacks as necessary on the session?
+  - with super-duper transcoder, the super-duper transcoder
+    will start the authentication chain, with its own session.
+    The io-channel would set its own callbacks on the session,
+    and the super-duper transcoder invoke those as necessary.
+
+So, let's have the io-channel at the end of the authentication
+chain, which will call the SetCallbacks once invoked.
+We also need a mechanism for the authentication callbacks to
+say something else like 'drop this connection' or 'fuck off'.
+
+DYNAMIC CONTROLS
+================
+  - for udp, change src port / src ip - dst port / dst ip
+    frequently. Will this help?
+      - at startup, some of those ports might be firewalled.
+      - during a connection, a DPI might detect uvpn, and
+        stop forwarding packets for particular port.
+    So, change ports if we're having troubles with a particular
+    4-tuple. OTOH, if we're predictable on how we do this, a
+    DPI might just decide to drop a few suspicious packets,
+    and observe if the client tries to reconnect with a different
+    4-tuple, and gain confidence in the fact that a particular
+    client is using uvpn.
+  - there can be non-adversary protocol specific issues.
+    Example: 0x0a dns implementations, flipping bits around
+    in our dns query. Proxies mangling http headers or modifying
+    our requests.
+
+When we send a packet, and "get no response":
+  1 - maybe the server is dead.
+  2 - maybe the server never got the packet.
+      (packet loss? firewall filtering the protocol
+      being used? ...)
+  3 - maybe the packet was corrupted in flight.
+      (dns 0x0a, mangling by random devices, ...)
+  4 - maybe the packet was correclty received and
+      processed, but the reply couldn't make it
+      back. (same 3 points, but for the way back,
+      client & server swap roles)
+
+There's protocol agnostic things that can be done:
+  1 - try a different protocol / mechanism.
+  2 - try to add redundancy in the packet
+      (to survive corruption)
+  3 - try protocol specific tunings
+      (eg, send dns data in a case insensitive way,
+      stop using http headers to encode data)  
+
+Those choices can't be made based on feedback: the server
+can't reply unless it's sure it's talking to an authenticated
+client. The way back, however, can be.
+
+
+IMPLEMENTATION
+
+UDP:
+  - receive packet
+  - read first 8 bytes.
+    - known session?
+      - change session cipher with the right one.
+      - decode latency information? shouldn't change
+        state until we're done.
+
+    - unknown session?
+      - we need to perform authentication. Here, we
+        have 2 possibilities:
+	- client has the server key, so we just need to
+	  decrypt the data, perform challenge / response.
+
+    - hooks:
+      - right now, the low level transcoder offers 2 hooks:
+        - the protector API, with Start, Continue, End.
+	- the connect callback, and read callback, tied with
+	  the session.
+      - what happens right now is:
+        - authenticator registers a connect callback, the
+	  initial protector is set to something simple.
+	- connect callback is called. authenticator handles
+	  the initial stages of the connection, by sending
+	  data through the session and changing the
+	  read callback.
+	- eventually, authentication is completed. The
+	  authenticator replaces the read callback with one
+	  of the IOChannel. Reads end up directly going
+	  through the channel from now on.
+
+Test model:
+  - In the end, I have 2 types of IOChannels:
+    - those that give me packets of wrangled data.
+      - packets boundaries are well defined, the size
+        of the packet is somewhat disclosed.
+	Adding randomized paddings will disclose a
+	range.
+    - those that give me *streams* of wrangled data.
+      - packets boundaries are not well defined until
+        we're able to decode the packet.
+      - the stream is "connection" oriented. We could
+        get multiple packets from the same sender
+	within one connection.
+
+  - channel currently is called with a connect callback,
+    and registers a read handler.
+
+From the unethical transcoder:
+  - we don't care about low level connections. We need to
+    find out what the connection is from the content of the
+    data.
+  - when Start is called, the server-unethical-transcoder
+    needs to:
+      - find the connection (read the first x bytes)
+      - eventually, *send data through the connection, to
+        complete the negotiation.
+
+* server-tcp-transcoder
++ simple-unethical-transcoder
+- authenticator
+
+-> HandleRead() *
+  -> Start() *
+    -> is this an existing connection? +
+    -> yes? change protector +
+    -> no? perform authentication + ---> problem: there is no session here.
+      -> pass the packet to the authenticator +
+        -> authenticator reads packet .. -
+	-> send challenge - ---> problem: there is no session here.
+	  -> SendMessage() *
+	    -> Encode +
+	  -> RegisterReadHandler - ---> problem: should be registered with the unethical transcoder, rather than the connection session.
+
+
+IDEA:
+  - - transcoder can be doing crazy things: like hiding data
+      in jpeg images or similar.
+    - when the transcoder receives data, it cannot blindly decode
+      it and pass it over to the next layer, it might need to do
+      some work itself, and access cryptographic material that
+      was setup by upper layers.
+    - Now, with the unethical transcoder example, we don't really
+      know the protector until we start receiving some data.
+
+EXAMPLE:
+  - let's say we receive a new tcp connection. The initial protector
+    is based on the RSA key? Not really.. we need to first determine
+    if this connection is part of an existing session or not.
+    Same thing when we receive an udp packet. Is this an existing
+    session, or not?
+
+IDEA:
+  -have protectors offer a more explicit API:
+    - GetControlData(..., &size);
+      GetControlData -> fails if there is no connection assigned.
+
+let's forget about the abstraction layers for a minute:
+  - if I was implementing a plain tcp reader behind the unethical transcoder:
+    - the tcp reader would read some data... enough to have a session id.
+      It would then check if the session is new or not, and if new, it would
+      then start doing the initial handshake.
+    - the udp reader would do the same thing: check the first x bytes of the
+      packet, determine if the session is new or not.
+      
+
+- Introduce a new abstraction layer: ConnectionManager?
+  - all input streams are considered connectionless.
+  - when new data is available to be read, the ConnectionManager
+    is called.
+  - the ConnectionManager will say if the connection is new,
+    or already known, eg, return a connection handler.
+    If no connection handler, the transcoder will just wait for more
+    data, or terminate the connection? depending on the status returned.
+  - 
+    

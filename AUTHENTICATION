@@ -1,0 +1,81 @@
+Notes on TLS / SSL
+==================
+  - in cleartext, the server sends a signed certificate
+    with a public key
+  - client verifies the certificate with the public keys
+    of known certification authorities
+  - and that it matches the server it is talking to
+
+  - in cleartext??, the client sends a signed certificate
+    with a public key
+  - server verifies the certificate with the public keys
+    of authorities it trusts
+
+  - client -> starts sending data using the servers plublic
+    key (not true, uses a randomly generated key .. blah blah,
+    but this is a good enough abstraction).
+  - server -> same as for the client. 
+
+Requirements
+============
+  - send as little cleartext data as possible
+  - be sneaky, eg, send data in a way that any middle part
+    cannot easily tell that this is a vpn connection
+
+  IDEAs with certificates
+  =======================
+    - client has a certificate
+    - server has a certificate
+
+    - client sends username, and a secret encrypted
+      with the private certificate.
+    - server replies encrypted with private key
+      
+
+    - no exchange of certificates
+
+  Common points
+  =============
+    - first packet from client is basically the
+      username, plus some data.
+
+Encoders:
+  - take an encrypted string they don't understand, and
+    turn it into something sneaky compatible with the protocol.
+
+Decoders:
+  - understand a protocol, and provide an encrytped string
+    they don't understand. 
+
+Authentication:
+  - authentication packet returns ip to assign to the internal
+    interface, a la dhcp.
+
+  - 32 bit, random key, used just to confuse things up.
+    32 bit, random session identifier  
+     8 bit, options (to define).
+     8 bit, user name length.
+     <username>
+    [possibly, other random data decided by the transport]
+
+Establishing a session:
+  - random key changes for each transport during authentication.
+  - session identifier is always the same.
+
+  Pseudo code:
+  - client starts, initializes transports.
+  - authentication packet is built, and sent over all
+    allowed transports.
+  - server responds to authentication request, on all
+    transports.
+  - some will make it through, some others won't.
+  - each transport returns the data back to the
+    authentication module.
+
+  Does it have to happen this way?
+  - nope, we could do authentication first through one transport,
+    and probe through all the others.
+    Or probe periodically through the others.
+
+
+

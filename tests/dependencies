@@ -1,0 +1,206 @@
+gtest-main.o: gtest-main.cc \
+	gtest.h
+gtest.o: gtest.cc \
+	gtest.h
+test-aes-session-protector.o: test-aes-session-protector.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/aes-session-protector.h \
+	/opt/projects/nstx-improved/uvpn/src/openssl-protector.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/protector.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/password.h
+test-base64.o: test-base64.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/base64.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h
+test-buffer.o: test-buffer.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h
+test-connection-key.o: test-connection-key.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/connection-key.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/hash.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/stl-helpers.h
+test-ip-addresses.o: test-ip-addresses.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/ip-addresses.h \
+	/opt/projects/nstx-improved/uvpn/src/sockaddr.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/hash.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/conversions.h
+test-ip-manager.o: test-ip-manager.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/ip-manager.h \
+	/opt/projects/nstx-improved/uvpn/src/ip-addresses.h \
+	/opt/projects/nstx-improved/uvpn/src/sockaddr.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/hash.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/conversions.h \
+	/opt/projects/nstx-improved/uvpn/src/interfaces.h \
+	/opt/projects/nstx-improved/uvpn/src/netlink-interfaces.h
+test-netlink-interfaces.o: test-netlink-interfaces.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/netlink-interfaces.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/sockaddr.h \
+	/opt/projects/nstx-improved/uvpn/src/hash.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/conversions.h \
+	/opt/projects/nstx-improved/uvpn/src/ip-addresses.h
+test-openssl-helpers.o: test-openssl-helpers.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/openssl-helpers.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/password.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+test-password.o: test-password.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/password.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+test-prng.o: test-prng.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+test-scramble-session-protector.o: test-scramble-session-protector.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/scramble-session-protector.h \
+	/opt/projects/nstx-improved/uvpn/src/openssl-protector.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/protector.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+test-serializers.o: test-serializers.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/serializers.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+test-sockaddr.o: test-sockaddr.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/sockaddr.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/hash.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/conversions.h
+test-srp-common.o: test-srp-common.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-common.h \
+	/opt/projects/nstx-improved/uvpn/src/openssl-helpers.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/password.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-client.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-passwd.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/userdb.h \
+	/opt/projects/nstx-improved/uvpn/src/logging.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-server.h
+test-userdb.o: test-userdb.cc \
+	gtest.h \
+	/opt/projects/nstx-improved/uvpn/src/userdb.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/password.h \
+	/opt/projects/nstx-improved/uvpn/src/logging.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+dependencies: \
+	gtest.h \
+	gtest-main.cc \
+	gtest.cc \
+	/opt/projects/nstx-improved/uvpn/src/aes-session-protector.h \
+	/opt/projects/nstx-improved/uvpn/src/openssl-protector.h \
+	/opt/projects/nstx-improved/uvpn/src/prng.h \
+	/opt/projects/nstx-improved/uvpn/src/charset.h \
+	/opt/projects/nstx-improved/uvpn/src/macros.h \
+	/opt/projects/nstx-improved/uvpn/src/protector.h \
+	/opt/projects/nstx-improved/uvpn/src/base.h \
+	/opt/projects/nstx-improved/uvpn/src/buffer.h \
+	/opt/projects/nstx-improved/uvpn/src/errors.h \
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
+	/opt/projects/nstx-improved/uvpn/src/password.h \
+	test-aes-session-protector.cc \
+	/opt/projects/nstx-improved/uvpn/src/base64.h \
+	test-base64.cc \
+	test-buffer.cc \
+	/opt/projects/nstx-improved/uvpn/src/connection-key.h \
+	/opt/projects/nstx-improved/uvpn/src/hash.h \
+	/opt/projects/nstx-improved/uvpn/src/stl-helpers.h \
+	test-connection-key.cc \
+	/opt/projects/nstx-improved/uvpn/src/ip-addresses.h \
+	/opt/projects/nstx-improved/uvpn/src/sockaddr.h \
+	/opt/projects/nstx-improved/uvpn/src/conversions.h \
+	test-ip-addresses.cc \
+	/opt/projects/nstx-improved/uvpn/src/ip-manager.h \
+	/opt/projects/nstx-improved/uvpn/src/interfaces.h \
+	/opt/projects/nstx-improved/uvpn/src/netlink-interfaces.h \
+	test-ip-manager.cc \
+	test-netlink-interfaces.cc \
+	/opt/projects/nstx-improved/uvpn/src/openssl-helpers.h \
+	test-openssl-helpers.cc \
+	test-password.cc \
+	test-prng.cc \
+	/opt/projects/nstx-improved/uvpn/src/scramble-session-protector.h \
+	test-scramble-session-protector.cc \
+	/opt/projects/nstx-improved/uvpn/src/serializers.h \
+	test-serializers.cc \
+	test-sockaddr.cc \
+	/opt/projects/nstx-improved/uvpn/src/srp-common.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-client.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-passwd.h \
+	/opt/projects/nstx-improved/uvpn/src/userdb.h \
+	/opt/projects/nstx-improved/uvpn/src/logging.h \
+	/opt/projects/nstx-improved/uvpn/src/srp-server.h \
+	test-srp-common.cc \
+	test-userdb.cc \
+	Makefile

@@ -1,0 +1,26 @@
+- lzh compression - so we can test that our buffer and
+  encoding / decoding primitives are adeguate.
+
+- http / raw socket transcoder, so we can 1) test that
+  again the API is ok for something fancier, and we can
+  have something to show off.
+
+- timer / error handling, really important if we want
+  anyone to really use this.
+
+- multi transcoder support, so we can really get this
+  to automatically try and pick multiple methods, and
+  we can test that it works as expected.
+
+- SrpClient and SrpServer, bn_ctx_ should be shared
+  with SrpSecret. Right now, Secret and Client and/or
+  Server have a different bn_ctx_.
+
+- SrpClient, and SrpServer, should make sure that bn_ctx_
+  and temporary big numbers are:
+    1) overwritten securely, so they're not left hanging
+       around in memory.
+    2) freed, as soon as they are not needed anymore.
+       This is especially important for the server, as
+       failure to do so will mean a few more kb of memory
+       *per client*.

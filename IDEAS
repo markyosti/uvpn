@@ -1,0 +1,136 @@
+RANDOM IDEAS
+============
+- auth - instead of scrambling session initiation, send a hash of
+  the username. The server will need to find the username
+  based on that hash, so.. it's either very expensive (if
+  we add a seed), or vulnerable to rainbow attacks.
+  one solution would be for the server to first send a random
+  seed. but gets more complex, and more round trips.
+  Use the IP of the server to seed the hash? so at least
+  it gets *much* harder for the random listener.
+  For the devoted attacker, he can prepare a rainbow table,
+  but for what? to be able to get the username of whoever
+  is connecting? the devoted attacker probably already knows.
+
+  To handle clashing problems: if we have username clashing,
+  try the parameters of the users that are clashing in order.
+  One will eventually succeed :) Or provide two hashes, likelyhood
+  of a clash will be *extremely* low.
+
+- transmission - tunnel over voip. Lot's of providers allow
+  voip in and/or out.
+
+- auth - use public / private keys. The first time you connect, you
+  get the key back.
+
+- transmission - reed solomon or turbo codes work well if data
+  ends up corrupted. This is probably viable for transports like
+  the dns one, where 0x20 or various other features of the dns
+  server can end up corrupting data.
+  There are also algorithms that combine turbo codes and encryption.
+  If the cost is low, we should consider them.
+
+- transmission - most likely, a noisy media (wireless), or
+  convoluted path will cause packets to be lost. Additionally,
+  we'll need to fragment packets to send them over certain
+  media. Rather than using fragmentation like techniques, that
+  will cause headaches for out of order packets, and employing
+  complex re-transmit algorithms, use fountain codes to send
+  large packets, which are generally order independent.
+  This allows both to place redundant data, and to split data
+  in multiple chunks that should be easy to reassemble.
+  Look into RaptorQ.
+
+- usage - instead of using tun tap, that requires routing table
+  and so on, provide a proxy interface. Either socks, or good old
+  http proxy, with connect support.
+
+- usage - have both the client and servers be daemons? and control
+  them via unix sockets. "eg, open tunnel with, close tunnel with,
+  sorry, connection died with, ...", so it's easy to have X clients,
+  terminals, and so on controlling the software, and interaction with
+  the user is isolated.
+
+- usage - if client is started and there is no network connectivity
+  (eg, no default gateway, no addresses assigned to interfaces, ...),
+  try to detect the configuration automatically. (dhcp? can we steal
+  the address of someone else? do we know what the gateway is? ...)
+
+- principle - Support for various protocols, and COMPRESSION.
+
+- principle - Don't fail - retry.
+
+- auth - add a concept of group. Users in the same groups end up
+  being able to communicate with each other, not just the server,
+  the network, or the internet. Have a NULL group or something
+  similar, that means that the user is in no groups.
+
+- auth - a uvpn-server is now able both to accept connections and
+  perform connections. Each user can run its own server, or there
+  can be a system wide one that users can control. We should have
+  some privilege system so we can say what a user can do locally
+  on a uvpn server, and what he can do remotely on the same server.
+
+- auth - the management protocol to control a uvpn-server should
+  work over th enetwork.
+
+Server:
+  - listen on 443 tcp, 53 tcp, 53 upd, 80 tcp
+
+icmp:
+  - use ping and pong packets, carrying payload.
+  - send errors back and forth, carrying payload.
+
+tcp ack:
+  - send ack packets with payload.
+
+80:
+  - add a host directive encode the rerquest in something that
+    might look like a http request
+  - target:
+    - must be able to go through a transparent proxy
+    - must be able to go through a real proxy
+    - try with GET and POST?
+
+25:
+  - smtp transport
+
+443:
+  - binary? we can do whatever we like.
+    - must be able to go through a transparent proxy 
+    - must be able to go through a real proxy
+
+53: 
+  - target:
+    - must support direct connection to dns.
+    - must support resolving through the server in /etc/resolv.conf.
+    - must support different MTUs.
+    - must support 0x20, and various other dns options. 
+
+Generic targets:
+  - no recognizable signature in packets.
+  - traffic is encrypted.
+  - tries to do the best.
+  - if multiple methods work, don't stick with one.
+  - as little configurable parameters as possible.
+    it needs to figure out things by itself.
+
+Server:
+  - must be able to forward to the real service if necessary.
+  - must be able to support and route multiple users.
+
+At startup:
+  - send probes. Start quickly, eventually slow down.
+  - user friendly, by default, does the best it can.
+  - built in retry logic, no failure is fatal.
+
+Structure:
+  - different communication modules, register themselves.
+    - they register the file descriptor they want to write to
+  - select, reads from tunnel device, enqueues data.
+    - data is encrypted before being sent to the channel.
+  - modules, when the file descriptor is ready, they dequeue
+    data from the global queue.
+  - modules, should unregister themseleves if the channel
+    seems to be overloaded. How to detect overload is channel
+    specific.
