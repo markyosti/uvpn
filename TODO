@@ -1,3 +1,15 @@
+- High level things to do:
+  - make it robust
+    - retry (if username or password are wrong)
+    - make sure resources are handled correctly
+      (memory is freed, file descriptors are closed,
+       buffers are handled correctly, and so on...)
+  - add support for windows:
+    http://msdn.microsoft.com/en-us/library/ms686358(v=vs.85).aspx
+    http://tinyclouds.org/iocp-links.html
+  - add support for mac:
+
+
 - lzh compression - so we can test that our buffer and
   encoding / decoding primitives are adeguate.
 
