@@ -2,6 +2,7 @@
 # define BASE_H
 
 # include <stdint.h>
+# include <memory>
 
 using namespace std;
 

@@ -81,6 +81,38 @@ client-udp-transcoder.o: client-udp-transcoder.cc \
 	protector.h \
 	client-authenticator.h \
 	serializers.h
+daemon-controller-client.o: daemon-controller-client.cc \
+	daemon-controller-client.h \
+	base.h \
+	daemon-controller-common.h \
+	transport.h \
+	buffer.h \
+	errors.h \
+	macros.h \
+	backtrace.h \
+	sockaddr.h \
+	hash.h \
+	conversions.h \
+	dispatcher.h \
+	stl-helpers.h
+daemon-controller-common.o: daemon-controller-common.cc \
+	daemon-controller-common.h \
+	base.h \
+	conversions.h
+daemon-controller-server.o: daemon-controller-server.cc \
+	daemon-controller-server.h \
+	base.h \
+	daemon-controller-common.h \
+	transport.h \
+	buffer.h \
+	errors.h \
+	macros.h \
+	backtrace.h \
+	sockaddr.h \
+	hash.h \
+	conversions.h \
+	dispatcher.h \
+	stl-helpers.h
 dispatcher.o: dispatcher.cc \
 	dispatcher.h \
 	base.h \
@@ -290,7 +322,8 @@ socket-transport.o: socket-transport.cc \
 	hash.h \
 	conversions.h \
 	dispatcher.h \
-	stl-helpers.h
+	stl-helpers.h \
+	fd-helpers.h
 srp-client-authenticator.o: srp-client-authenticator.cc \
 	srp-client-authenticator.h \
 	authenticator-id.h \
@@ -312,7 +345,6 @@ srp-client-authenticator.o: srp-client-authenticator.cc \
 	openssl-helpers.h \
 	srp-passwd.h \
 	userdb.h \
-	logging.h \
 	srp-common.h \
 	aes-session-protector.h \
 	openssl-protector.h \
@@ -330,12 +362,11 @@ srp-client.o: srp-client.cc \
 	charset.h \
 	macros.h \
 	userdb.h \
-	logging.h \
-	errors.h \
-	backtrace.h \
 	srp-common.h \
 	serializers.h \
 	buffer.h \
+	errors.h \
+	backtrace.h \
 	conversions.h
 srp-common.o: srp-common.cc \
 	srp-common.h \
@@ -353,11 +384,10 @@ srp-passwd.o: srp-passwd.cc \
 	userdb.h \
 	base.h \
 	password.h \
-	logging.h \
-	errors.h \
-	backtrace.h \
 	srp-common.h \
 	openssl-helpers.h \
+	errors.h \
+	backtrace.h \
 	serializers.h \
 	buffer.h \
 	base64.h \
@@ -384,7 +414,6 @@ srp-server-authenticator.o: srp-server-authenticator.cc \
 	srp-common.h \
 	srp-passwd.h \
 	userdb.h \
-	logging.h \
 	scramble-session-protector.h \
 	openssl-protector.h \
 	aes-session-protector.h \
@@ -400,11 +429,10 @@ srp-server.o: srp-server.cc \
 	charset.h \
 	macros.h \
 	userdb.h \
-	logging.h \
-	errors.h \
-	backtrace.h \
 	serializers.h \
 	buffer.h \
+	errors.h \
+	backtrace.h \
 	conversions.h
 terminal-user-chatter.o: terminal-user-chatter.cc \
 	terminal-user-chatter.h \
@@ -496,7 +524,6 @@ userdb.o: userdb.cc \
 	userdb.h \
 	base.h \
 	password.h \
-	logging.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
@@ -536,13 +563,14 @@ uvpn-client.o: uvpn-client.cc \
 	openssl-helpers.h \
 	srp-passwd.h \
 	userdb.h \
-	logging.h \
 	srp-common.h \
 	client-simple-connection-manager.h \
 	terminal-user-chatter.h \
 	user-chatter.h \
+	daemon-controller-server.h \
 	client-udp-transcoder.h \
 	client-tcp-transcoder.h
+uvpn-ctl.o: uvpn-ctl.cc
 uvpn-ip-config.o: uvpn-ip-config.cc \
 	base.h \
 	errors.h \
@@ -592,17 +620,16 @@ uvpn-server.o: uvpn-server.cc \
 	srp-common.h \
 	srp-passwd.h \
 	userdb.h \
-	logging.h \
 	scramble-session-protector.h \
 	openssl-protector.h \
 	server-udp-transcoder.h \
 	server-tcp-transcoder.h \
-	server-simple-connection-manager.h
+	server-simple-connection-manager.h \
+	daemon-controller-server.h
 uvpn-user.o: uvpn-user.cc \
 	base.h \
 	userdb.h \
 	password.h \
-	logging.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
@@ -650,6 +677,12 @@ deps: \
 	client-tcp-transcoder.cc \
 	client-udp-transcoder.h \
 	client-udp-transcoder.cc \
+	daemon-controller-client.h \
+	daemon-controller-common.h \
+	daemon-controller-client.cc \
+	daemon-controller-common.cc \
+	daemon-controller-server.h \
+	daemon-controller-server.cc \
 	dispatcher.cc \
 	ip-addresses.h \
 	ip-addresses.cc \
@@ -677,13 +710,13 @@ deps: \
 	server-unethical-transcoder.cc \
 	sockaddr.cc \
 	socket-transport.h \
+	fd-helpers.h \
 	socket-transport.cc \
 	srp-client-authenticator.h \
 	authenticator-id.h \
 	srp-client.h \
 	srp-passwd.h \
 	userdb.h \
-	logging.h \
 	srp-common.h \
 	user-chatter.h \
 	terminal.h \
@@ -697,7 +730,6 @@ deps: \
 	srp-server.cc \
 	terminal-user-chatter.h \
 	terminal-user-chatter.cc \
-	fd-helpers.h \
 	terminal.cc \
 	tun-tap-client-channel.h \
 	io-channel-id.h \
@@ -710,6 +742,7 @@ deps: \
 	user-chatter.cc \
 	userdb.cc \
 	uvpn-client.cc \
+	uvpn-ctl.cc \
 	uvpn-ip-config.cc \
 	uvpn-server.cc \
 	uvpn-user.cc \

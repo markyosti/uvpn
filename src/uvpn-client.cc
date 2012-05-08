@@ -10,14 +10,13 @@
 #include "srp-client-authenticator.h"
 #include "client-simple-connection-manager.h"
 #include "terminal-user-chatter.h"
+#include "daemon-controller-server.h"
 
 #include "client-udp-transcoder.h"
 #include "client-tcp-transcoder.h"
 
 int main(int argc, char** argv) {
   const string& server("192.168.0.2");
-
-  NetworkConfig config;
 
   // Dispatcher: listens on fds, dispatches events.
   Dispatcher dispatcher;
@@ -30,6 +29,14 @@ int main(int argc, char** argv) {
   SocketTransport socket_api(&dispatcher);
   //SocksTransport socks_api(&dispatcher);
   //ProxyTransport proxy_api(&dispatcher);
+  
+  DaemonControllerServer controller(&dispatcher);
+  if (!controller.Init(&socket_api, "client", "default")) {
+    LOG_FATAL("could not initialize controller");
+    return 2;
+  }
+
+  NetworkConfig config;
 
   // Initialize IO channels. Client IO channels wait for packets / requests
   // from the user, and forward them to the server.
@@ -47,6 +54,8 @@ int main(int argc, char** argv) {
   SrpClientAuthenticator a_srp(&prng);
 
   ClientSimpleConnectionManager manager(&prng, &dispatcher);
+  controller.AddClient(&manager);
+
   manager.RegisterTransport(&socket_api);
   //manager.RegisterTransport(&socks_api);
   //manager.RegisterTransport(&proxy_api);

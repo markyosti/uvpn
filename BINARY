@@ -20,6 +20,10 @@
   - show network configs / resources -> processor / configurator
   - state of processor / configurator -> monitor, processor / configurator
 
-  - show connections -> processor
-  - connect -> processor
-  - listen -> processor
+  - client show-servers -> processor
+  - client add-server -> processor
+  - client del-server -> processor
+  - server add-protocol -> processor
+  - server del-protocol -> processor
+  - server show-clients -> processor
+  - stop -> monitor

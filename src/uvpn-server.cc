@@ -12,6 +12,7 @@
 #include "server-tcp-transcoder.h"
 #include "server-simple-connection-manager.h"
 #include "interfaces.h"
+#include "daemon-controller-server.h"
 
 // So, the client:
 //   - creates a dispatcher, transport, and transcoder.
@@ -22,16 +23,21 @@
 //   - waits for new authentication requests to arrive.
 
 int main(int argc, char** argv) {
-  UdbSecretFile userdb("/root/uvpn.passwd");
-  NetworkConfig netconfig;
-  
   Dispatcher dispatcher;
   if (!dispatcher.Init()) {
     LOG_FATAL("could not initialize dispatcher");
     return 1;
   }
-
   SocketTransport socket_api(&dispatcher);
+
+  DaemonControllerServer controller(&dispatcher);
+  if (!controller.Init(&socket_api, "client", "default")) {
+    LOG_FATAL("could not initialize controller");
+    return 2;
+  }
+
+  UdbSecretFile userdb("/root/uvpn.passwd");
+  NetworkConfig netconfig;
 
   // Initialize IO channels. Server IO channels expect packets / requests
   // from the users, interpret them, and forward them.
@@ -47,6 +53,7 @@ int main(int argc, char** argv) {
   // Initialize ConnectionManager.
   DefaultPrng prng;
   ServerSimpleConnectionManager manager(&prng, &dispatcher);
+  controller.AddServer(&manager);
 
   // Initialize authenticators.
   SrpServerAuthenticator auth_srp(&userdb, &prng);
