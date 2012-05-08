@@ -81,6 +81,12 @@ client-udp-transcoder.o: client-udp-transcoder.cc \
 	protector.h \
 	client-authenticator.h \
 	serializers.h
+controller.o: controller.cc \
+	controller.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	base.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h
 daemon-controller-client.o: daemon-controller-client.cc \
 	daemon-controller-client.h \
 	base.h \
@@ -570,7 +576,13 @@ uvpn-client.o: uvpn-client.cc \
 	daemon-controller-server.h \
 	client-udp-transcoder.h \
 	client-tcp-transcoder.h
-uvpn-ctl.o: uvpn-ctl.cc
+uvpn-ctl.o: uvpn-ctl.cc \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-argv.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	base.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	controller.h
 uvpn-ip-config.o: uvpn-ip-config.cc \
 	base.h \
 	errors.h \
@@ -677,6 +689,11 @@ deps: \
 	client-tcp-transcoder.cc \
 	client-udp-transcoder.h \
 	client-udp-transcoder.cc \
+	controller.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
+	controller.cc \
 	daemon-controller-client.h \
 	daemon-controller-common.h \
 	daemon-controller-client.cc \
@@ -742,6 +759,7 @@ deps: \
 	user-chatter.cc \
 	userdb.cc \
 	uvpn-client.cc \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-argv.h \
 	uvpn-ctl.cc \
 	uvpn-ip-config.cc \
 	uvpn-server.cc \

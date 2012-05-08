@@ -9,6 +9,8 @@ CPPFLAGS = -Wall -pedantic -ggdb3 -O0 -DPRINT_DEBUG -Wformat-nonliteral -Wextra 
 LDFLAGS = -lssl -lcrypto -lm -lstdc++ -rdynamic -ggdb3 -lduma
 ALLSOURCES = *.cc
 
+LIBYAARG = ../lib/yaarg/config-parser-argv.o ../lib/yaarg/config-parser-options.o ../lib/yaarg/config-parser.o
+
 all: deps uvpn-user uvpn-client uvpn-server uvpn-ip-config uvpn-ctl
 	
 -include deps
@@ -24,13 +26,13 @@ uvpn-client: uvpn-client.o scramble-session-protector.o prng.o dispatcher.o open
 
 uvpn-server: uvpn-server.o scramble-session-protector.o prng.o dispatcher.o openssl-helpers.o srp-server-authenticator.o scramble-session-protector.o srp-common.o srp-server.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-server-channel.o packet-queue.o backtrace.o sockaddr.o userdb.o base64.o terminal.o openssl-protector.o password.o aes-session-protector.o ip-addresses.o ip-manager.o netlink-interfaces.o server-tcp-transcoder.o server-simple-connection-manager.o server-udp-transcoder.o daemon-controller-server.o daemon-controller-common.o
 
-uvpn-ctl: daemon-controller-common.o daemon-controller-client.o sockaddr.o
+uvpn-ctl: daemon-controller-common.o daemon-controller-client.o sockaddr.o controller.o $(LIBYAARG)
 
 %.o: %.cc
 	@echo "  * COMPILING $<"
 	@$(CXX) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 clean:
-	rm -f ./*.o
+	rm -f ./*.o ../lib/yaarg/*.o
 	rm -f ./uvpn-user ./uvpn-client ./uvpn-server ./uvpn-ip-config ./uvpn-ctl
 	# $(MAKE) -C tests/ clean

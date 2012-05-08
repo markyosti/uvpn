@@ -26,31 +26,7 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-# include "../lib/yaarg/config-parser-argv.h"
-# include "controller.h"
+#include "controller.h"
 
-int main(int argc, const char** argv) {
-  ConfigParserArgv parser(
-      ConfigParser::Default,
-      "Controls a yovpn client or server running on this machine.");
-
-  StandardOptions options(&parser);
-  Controller controller(&parser);
-
-  parser.Parse(argc, argv);
- 
-  if (parser.HasMessages())
-    parser.PrintMessages(&cout);
-  if (parser.HasErrors())
-    parser.PrintErrors(&cerr);
-
-  if (parser.ShouldExit()) {
-    int exitstatus;
-    if (parser.HasErrors())
-      exitstatus = 1;
-    else
-      exitstatus = 0;
-    return exitstatus;
-  }
-  return 0;
+Controller::Controller(ConfigParser* parser) {
 }
