@@ -45,12 +45,14 @@ int main(int argc, const char** argv) {
     parser.PrintErrors(&cerr);
 
   if (parser.ShouldExit()) {
-    int exitstatus;
     if (parser.HasErrors())
-      exitstatus = 1;
-    else
-      exitstatus = 0;
-    return exitstatus;
+      return 1;
+    return 0;
   }
+
+  if (!controller.Init())
+    return 2;
+
+  parser.RunCommands();
   return 0;
 }

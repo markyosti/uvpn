@@ -28,5 +28,67 @@
 
 #include "controller.h"
 
-Controller::Controller(ConfigParser* parser) {
+Controller::Controller(ConfigParser* parser)
+    : type_(
+          parser, Option::Default, "type", "t", "client",
+          "Each yovpn instance runs multiple processes to handle vpn "
+          "connections. Tipically, you will have a 'client' process and "
+          "possibly a 'server' process, but it depends on how you configured "
+          "yovpn to start."),
+      name_(
+          parser, Option::Default, "name", "n", "default",
+          "On a single machine you can have multiple instances of yovpn "
+          "running, each one with its own set of processes, and each one "
+          "with its own name. With this option, you can specify which "
+          "yovpn instance you want to control. "
+          "If you did not change the default name and only run one yovpn, "
+          "you don't need to change this option."),
+      server_(
+          parser, Command::Default, "server",
+          "Inspect or change configuration of a server."),
+      server_show_clients_(
+          &server_, Command::Default, "show-clients",
+          "List the current clients connected to the server.",
+          bind(&Controller::CommandServerShowClients, this)),
+      server_show_users_(
+          &server_, Command::Default, "show-users",
+          "List the current users connected to the server."),
+      server_save_state_(
+          &server_, Command::Default, "save-state",
+          "Save the state of the server, restore it at startup."),
+
+      client_(
+          parser, Command::Default, "client",
+          "Inspect or change configuration of a client."),
+      client_connect_(
+          &client_, Command::Default, "connect",
+          "Connect to a specific server.",
+          bind(&Controller::CommandClientConnect, this)),
+      client_disconnect_(
+          &client_, Command::Default, "disconnect",
+          "Connect to a specific server."),
+      client_save_state_(
+          &client_, Command::Default, "save-state",
+          "Save the state of the client, restore it at startup."),
+
+      transport_(&dispatcher_),
+      daemon_(&dispatcher_) {
+}
+
+void Controller::CommandServerShowClients() {
+  LOG_DEBUG();
+}
+
+void Controller::CommandClientConnect() {
+  LOG_DEBUG();
+}
+
+bool Controller::Init() {
+  if (!dispatcher_.Init())
+    return false;
+
+  if (!daemon_.Init(&transport_, type_.Get().c_str(), name_.Get().c_str()))
+    return false;
+
+  return true;
 }

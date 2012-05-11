@@ -29,11 +29,36 @@
 #ifndef CONTROLLER_H
 # define CONTROLLER_H
 
-# include "../lib/yaarg/config-parser-options.h"
+# include "dispatcher.h"
+# include "socket-transport.h"
+# include "daemon-controller-client.h"
+# include "yaarg.h"
 
 class Controller {
  public:
   Controller(ConfigParser* parser);
+  bool Init();
+
+ private:
+  void CommandServerShowClients();
+  void CommandClientConnect();
+
+  StringOption type_;
+  StringOption name_;
+
+  Command server_;
+  CallbackCommand server_show_clients_;
+  Command server_show_users_;
+  Command server_save_state_;
+
+  Command client_;
+  CallbackCommand client_connect_;
+  Command client_disconnect_;
+  Command client_save_state_;
+
+  Dispatcher dispatcher_;
+  SocketTransport transport_;
+  DaemonControllerClient daemon_;
 };
 
 #endif /* CONTROLLER_H */

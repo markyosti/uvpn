@@ -26,25 +26,25 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-#ifndef DAEMON_CONTROLLER_CLIENT_H
-# define DAEMON_CONTROLLER_CLIENT_H
+#ifndef YAARG_H
+# define YAARG_H
 
 # include "base.h"
+# include "../lib/yaarg/config-parser-options.h"
 
-# include <vector>
-
-class Dispatcher;
-class Transport;
-class BoundChannel;
-
-class DaemonControllerClient {
+class CallbackCommand : public Command {
  public:
-  DaemonControllerClient(Dispatcher* dispatcher);
-  bool Init(Transport* transport, const char* type, const char* name);
+  typedef function<void ()> callback_t;
+  CallbackCommand(
+      CommandHolder* holder, int flags, const char* name,
+      const char* description, callback_t callback)
+      : Command(holder, flags, name, description),
+        callback_(callback) {}
+
+  void Run() { callback_(); }
 
  private:
-  Dispatcher* dispatcher_;
-  auto_ptr<BoundChannel> channel_; 
+  callback_t callback_;
 };
 
-#endif /* DAEMON_CONTROLLER_CLIENT_H */
+#endif /* YAARG_H */

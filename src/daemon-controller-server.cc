@@ -37,7 +37,6 @@ DaemonControllerServer::DaemonControllerServer(Dispatcher* dispatcher)
     : dispatcher_(dispatcher) {
 }
 
-
 bool DaemonControllerServer::Init(
     Transport* transport, const char* type, const char* name) {
   LOG_DEBUG();
@@ -46,6 +45,11 @@ bool DaemonControllerServer::Init(
   channel_.reset(transport->DatagramListenOn(socket));
   if (!channel_.get())
     return false;
+
+  // Pseudo code:
+  //   - wait for connectins to arrive.
+  //   - when they arrive, run the code.
+
   return true;
 }
 

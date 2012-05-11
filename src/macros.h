@@ -9,7 +9,9 @@
 
 # define NO_COPY(obj) obj(const obj&); obj& operator=(const obj&)
 
-# define BIT(n) (1 << (n))
+# ifndef BIT
+#  define BIT(n) (1 << (n))
+# endif
 
 # define PRINTF(m, s) __attribute__((format (printf, m, s)))
 
