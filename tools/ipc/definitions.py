@@ -47,7 +47,7 @@ DISPATCH_FUNCTION = \
 """
 DISPATCH_BODY = \
 """\
-    uint16_t num;
+    int16_t num;
     if (!DecodeFromBuffer(cursor, &num)) {
       // TODO: error handling
       return -1;
