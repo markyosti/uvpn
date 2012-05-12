@@ -12,36 +12,48 @@
 // server can crash each other. Assumption is that the client should never
 // trust the server, and the other way around.
 
-inline void EncodeToBuffer(uint8_t num, InputCursor* cursor) {
+inline bool EncodeToBuffer(uint8_t num, InputCursor* cursor) {
   cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
+  return true;
 }
 
-inline void EncodeToBuffer(uint32_t num, InputCursor* cursor) {
+inline bool EncodeToBuffer(uint32_t num, InputCursor* cursor) {
   num = htonl(num);
   cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
+  return true;
 }
 
-inline void EncodeToBuffer(int16_t num, InputCursor* cursor) {
+inline bool EncodeToBuffer(int16_t num, InputCursor* cursor) {
   num = htons(num);
   cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
+  return true;
 }
 
-inline void EncodeToBuffer(uint16_t num, InputCursor* cursor) {
+inline bool EncodeToBuffer(uint16_t num, InputCursor* cursor) {
   num = htons(num);
   cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
+  return true;
 }
 
-inline void EncodeToBuffer(const char* str, int size, InputCursor* cursor) {
+inline bool EncodeToBuffer(const char* str, int size, InputCursor* cursor) {
+  if (size >= numeric_limits<uint16_t>::max())
+    return false;
+
   EncodeToBuffer(static_cast<uint16_t>(size), cursor);
   cursor->Add(str, size);
+  return true;
 }
 
-inline void EncodeToBuffer(const string& str, InputCursor* cursor) {
+inline bool EncodeToBuffer(const string& str, InputCursor* cursor) {
+  if (str.size() >= numeric_limits<uint16_t>::max())
+    return false;
+
   EncodeToBuffer(static_cast<uint16_t>(str.size()), cursor);
   cursor->Add(str.c_str(), str.size());
+  return true;
 }
 
-inline void EncodeToBuffer(
+inline bool EncodeToBuffer(
     OutputCursor* output, InputCursor* input) {
   input->Reserve(output->LeftSize());
   while (output->LeftSize()) {
@@ -50,7 +62,15 @@ inline void EncodeToBuffer(
     input->Increment(output->ContiguousSize());
     output->Increment(output->ContiguousSize());
   }
+  return true;
 }
+
+// When parsing data, there are 3 possible outcomes:
+//   - everything is good.
+//   - need more data, we don't have enough.
+//   - we have all the data we need, but it is invalid.
+// Additionally, if we need more data, we should tell the caller how much
+// more data is needed, so it can call us when there is enough available.
 
 inline bool DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
