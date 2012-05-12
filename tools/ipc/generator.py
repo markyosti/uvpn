@@ -1,6 +1,21 @@
 #!/usr/bin/python
 
 """
+Generates C++ header files based on .ipc files.
+
+Using IPCs in any programming language requires sending and receiving data.
+Usually, you start by serializing an object representing your request, and
+writing code to unserialize it and to invoke some code to handle the request.
+
+This tool allows you to write a generic .ipc file describing the interface
+between an IPC client and a server. Within this ipc file, you need to describe
+which requests a client can issue to a server, and which replies it should
+expect. The interface is bidirectional, so you can also describe requests
+a server can issue to a client, and the replies it expects.
+
+The generator will create .h files with the serialization and unserialization
+code, and skeleton classes so you just have to implement the code to handle
+the requests. The generated code is asynchronous.
 """
 
 import argparse
@@ -105,8 +120,6 @@ def main(argv):
     except IOError as e:
       print >>sys.stderr, (
           "ERROR: could not save server interface: %s" % str(e))
-
-
 
 if __name__ == "__main__":
   sys.exit(main(sys.argv))
