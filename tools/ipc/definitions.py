@@ -26,6 +26,7 @@ CLIENT_RPC_SEND_REQUEST_START = "  void SendRequest%(name)s(%(send_params)s) {%(
 CLIENT_RPC_SEND_REQUEST_END = "    Send();\n  }"
 CLIENT_RPC_REQUEST_PARSE_START = "  void Parse%(name)sRequest(OutputCursor* cursor) {%(unserialize_request)s"
 CLIENT_RPC_REQUEST_PARSE_END = "    Process%(name)sRequest(%(send_unqual)s);\n  }"
+CLIENT_RPC_CALL_REQUEST_DISPATCH = "      Parse%(name)sRequest(cursor);"
 
 CLIENT_RPC_REPLY_DISPATCH = (
     "  virtual void Process%(name)sReply("
@@ -34,7 +35,34 @@ CLIENT_RPC_SEND_REPLY_START = "  void SendReplyFor%(name)s(%(receive_params)s) {
 CLIENT_RPC_SEND_REPLY_END = "    Send();\n  }"
 CLIENT_RPC_REPLY_PARSE_START = "  void Parse%(name)sReply(OutputCursor* cursor) {%(unserialize_reply)s"
 CLIENT_RPC_REPLY_PARSE_END = "    Process%(name)sReply(%(receive_unqual)s);\n  }"
+CLIENT_RPC_CALL_REPLY_DISPATCH = "      Parse%(name)sReply(cursor);"
 
+DISPATCH_START = "\n  // This is the method that will dispatch the incoming requests.\n  int Dispatch(OutputCursor* cursor) {"
+DISPATCH_FUNCTION = \
+"""\
+      case %(dispatch_num)s:
+%(dispatch_function)s;
+        // TODO: error handling
+        break;
+"""
+DISPATCH_BODY = \
+"""\
+    uint16_t num;
+    if (!DecodeFromBuffer(cursor, &num)) {
+      // TODO: error handling
+      return -1;
+    }
+
+    switch (num) {
+%(dispatch_functions)s
+      default:
+        // TODO: error handling
+        return -1;
+    }
+
+    return 0;"""
+
+DISPATCH_END = "  }"
 
 INTERFACE_END = "};"
 
@@ -73,25 +101,40 @@ class Interface(object):
         self.client_class_name, "Client",
         "GetClientSendInterface", "GetClientReceiveInterface")
 
+  def GenerateDispatcher(self, to_dispatch):
+    functions = []
+    for num, method in to_dispatch:
+      functions.append(DISPATCH_FUNCTION % {
+          "dispatch_num": num, "dispatch_function": "  " + method})
+      
+    return [
+        DISPATCH_START,
+        DISPATCH_BODY % {"dispatch_functions": "\n".join(functions)},
+        DISPATCH_END]
+
   def OutputInterface(self, cname, ctype, send_method, receive_method):
     methods_to_implement = []
     methods_public = []
     methods_private = []
+    to_dispatch = []
 
     for num, rpc in enumerate(self.sends, 1):
-      mti, mpub, mpriv = getattr(rpc, send_method)(num)
+      mti, mpub, mpriv, disp = getattr(rpc, send_method)(num)
 
       methods_to_implement.extend(mti)
       methods_public.extend(mpub)
       methods_private.extend(mpriv)
+      to_dispatch.extend(disp)
 
     for num, rpc in enumerate(self.receives, 0x4000):
-      mti, mpub, mpriv = getattr(rpc, receive_method)(num)
+      mti, mpub, mpriv, disp = getattr(rpc, receive_method)(num)
 
       methods_to_implement.extend(mti)
       methods_public.extend(mpub)
       methods_private.extend(mpriv)
+      to_dispatch.extend(disp)
 
+    methods_private.extend(self.GenerateDispatcher(to_dispatch))
     return self.FormatMethods(
         cname, ctype, methods_to_implement, methods_public, methods_private)
 
@@ -176,14 +219,14 @@ class Rpc(object):
     to_implement = [CLIENT_RPC_REPLY_DISPATCH % args]
     public = [CLIENT_RPC_SEND_REQUEST_START % args, CLIENT_RPC_SEND_REQUEST_END % args]
     private = [CLIENT_RPC_REPLY_PARSE_START % args, CLIENT_RPC_REPLY_PARSE_END % args]
-    return to_implement, public, private
+    return to_implement, public, private, [(-num, CLIENT_RPC_CALL_REPLY_DISPATCH % args)]
 
   def GetClientReceiveInterface(self, num):
     args = self.GetExpansionDict(num, self.sends, self.receives)
     to_implement = [CLIENT_RPC_REQUEST_DISPATCH % args]
     public = [CLIENT_RPC_SEND_REPLY_START % args, CLIENT_RPC_SEND_REPLY_END % args]
     private = [CLIENT_RPC_REQUEST_PARSE_START % args, CLIENT_RPC_REQUEST_PARSE_END % args]
-    return to_implement, public, private
+    return to_implement, public, private, [(num, CLIENT_RPC_CALL_REQUEST_DISPATCH % args)]
 
 
 class Parameter(object):
