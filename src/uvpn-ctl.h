@@ -26,17 +26,17 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-#ifndef CONTROLLER_H
-# define CONTROLLER_H
+#ifndef UVPN_CTL_H
+# define UVPN_CTL_H
 
 # include "dispatcher.h"
 # include "socket-transport.h"
 # include "daemon-controller-client.h"
 # include "yaarg.h"
 
-class Controller {
+class UvpnCtl {
  public:
-  Controller(ConfigParser* parser);
+  UvpnCtl(ConfigParser* parser);
   bool Init();
 
  private:
@@ -61,4 +61,4 @@ class Controller {
   DaemonControllerClient daemon_;
 };
 
-#endif /* CONTROLLER_H */
+#endif /* UVPN_CTL_H */
