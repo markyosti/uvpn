@@ -91,13 +91,13 @@ class Interface(object):
     result.append(INTERFACE_END)
     return "\n".join(result)
 
-  def OutputServerInterface(self):
-    return self.OutputInterface(
+  def GetServerInterface(self):
+    return self.GetInterface(
         self.server_class_name, "Server",
         "GetClientReceiveInterface", "GetClientSendInterface")
 
-  def OutputClientInterface(self):
-    return self.OutputInterface(
+  def GetClientInterface(self):
+    return self.GetInterface(
         self.client_class_name, "Client",
         "GetClientSendInterface", "GetClientReceiveInterface")
 
@@ -112,7 +112,7 @@ class Interface(object):
         DISPATCH_BODY % {"dispatch_functions": "\n".join(functions)},
         DISPATCH_END]
 
-  def OutputInterface(self, cname, ctype, send_method, receive_method):
+  def GetInterface(self, cname, ctype, send_method, receive_method):
     methods_to_implement = []
     methods_public = []
     methods_private = []

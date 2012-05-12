@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+"""
+"""
+
+import argparse
+import os
 import sys
 import definitions
 
@@ -12,28 +17,95 @@ class InterfaceGenerator(object):
     self.config = {}
     parameters = dict(
         (key, getattr(definitions, key)) for key in dir(definitions))
-    exec file(fname) in parameters, self.config
-    self.interfaces = self.config["INTERFACES"]
-    return True
+    try:
+      f = file(fname)
+    except IOError as e:
+      return "could not read file %s: %s" % (fname, e.strerror)
+    try:
+      exec f in parameters, self.config
+    except Exception as e:
+      return "file %s: %s" % (fname, str(e))
+    try:
+      self.interfaces = self.config["INTERFACES"]
+    except KeyError:
+      return "file %s: must define an 'INTERFACES' list."
 
-  def OutputInterfaces(self):
+    if type(self.interfaces) != type([]):
+      return "file %s: 'INTERFACES' must be a list." % fname
+
+  def GetClientInterfaces(self):
+    result = []
     for interface in self.interfaces:
-      print interface.OutputClientInterface()
-      print interface.OutputServerInterface()
+      result.append(interface.GetClientInterface())
+    return "\n".join(result)
 
-def FreakOut(message):
-  print >>sys.stderr, message
-  sys.exit(1)
-  
+  def GetServerInterfaces(self):
+    result = []
+    for interface in self.interfaces:
+      result.append(interface.GetServerInterface())
+    return "\n".join(result)
+
 def main(argv):
-  if len(argv) < 2:
-    FreakOut("Need name of interface file to process")
+  parser = argparse.ArgumentParser(description="Generates C++ interface files.")
+  parser.add_argument(
+      "files", metavar="FILE", type=str, nargs="+",
+      help="An interface definition file to process. Interface definition "
+           "files are python files containing an INTERFACE list of Interface "
+           "objects, as defined in definitions.py. See examples for more "
+           "details.")
+  parser.add_argument(
+      "--client-template", "-c", type=str, nargs=1, default="%(filename)s-client.h",
+      help="Template for the name of the server interface file to generate.")
+  parser.add_argument(
+      "--server-template", "-s", type=str, nargs=1, default="%(filename)s-server.h",
+      help="Template for the name of the server interface file to generate.")
+      
+  args = parser.parse_args()
+  for fname in args.files:
+    short_name = os.path.splitext(os.path.basename(fname))[0]
 
-  generator = InterfaceGenerator()
-  if not generator.ParseFile(argv[1]):
-    return 1
+    try:
+      client_name = str(args.client_template) % {"filename": short_name}
+      server_name = str(args.server_template) % {"filename": short_name}
+    except KeyError as e:
+      parser.error(
+          "invalid --client-name or --server-name: unknown key %s" % str(e))
 
-  generator.OutputInterfaces()
+    generator = InterfaceGenerator()
+    error = generator.ParseFile(fname)
+    if error:
+      print >>sys.stderr, "ERROR:", error
+      continue
+
+    print "+ processing %s" % (fname)
+    try:
+      interfaces = generator.GetClientInterfaces()
+      print "  + generated client interface"
+    except Exception as e:
+      print >>sys.stderr, (
+          "ERROR: %s, cannot generate client interface: %s" % (fname, str(e)))
+
+    try:
+      open(client_name, "w").write(interfaces)
+      print "  + file %s written" % (client_name)
+    except IOError as e:
+      print >>sys.stderr, (
+          "ERROR: could not save client interface: %s" % str(e))
+
+    try:
+      interfaces = generator.GetServerInterfaces()
+      print "  + generated server interface"
+    except Exception as e:
+      print >>sys.stderr, (
+          "ERROR: %s, cannot generate server interface: %s" % (fname, str(e)))
+
+    try:
+      open(server_name, "w").write(interfaces)
+      print "  + file %s written" % (server_name)
+    except IOError as e:
+      print >>sys.stderr, (
+          "ERROR: could not save server interface: %s" % str(e))
+
 
 
 if __name__ == "__main__":
