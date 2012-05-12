@@ -18,17 +18,23 @@ INTERFACE_START = (
 """class %(class_name)s : public Ipc%(class_type)sInterface {
  public:""")
 
-CLIENT_RPC_REPLY = (
-    "  virtual void Process%(client_rpc_name)sReply("
-    "%(client_rpc_receive_params)s) = 0;")
-CLIENT_RPC_SEND_START = "  void SendRequest%(client_rpc_name)s(%(client_rpc_send_params)s) {%(client_send_serialization)s"
-CLIENT_RPC_SEND_END = "    Send();\n  }"
 
-CLIENT_RPC_RECEIVE = (
-    "  virtual void Process%(client_rpc_name)sRequest("
-    "%(client_rpc_send_params)s) = 0;")
-CLIENT_RPC_REPLY_START = "  void SendReplyFor%(client_rpc_name)s(%(client_rpc_receive_params)s) {%(client_send_serialization)s"
-CLIENT_RPC_REPLY_END = "    Send();\n  }"
+CLIENT_RPC_REQUEST_DISPATCH = (
+    "  virtual void Process%(name)sRequest("
+    "%(send_params)s) = 0;")
+CLIENT_RPC_SEND_REQUEST_START = "  void SendRequest%(name)s(%(send_params)s) {%(serialize_request)s"
+CLIENT_RPC_SEND_REQUEST_END = "    Send();\n  }"
+CLIENT_RPC_REQUEST_PARSE_START = "  void Parse%(name)sRequest(OutputCursor* cursor) {%(unserialize_request)s"
+CLIENT_RPC_REQUEST_PARSE_END = "    Process%(name)sRequest(%(send_unqual)s);\n  }"
+
+CLIENT_RPC_REPLY_DISPATCH = (
+    "  virtual void Process%(name)sReply("
+    "%(receive_params)s) = 0;")
+CLIENT_RPC_SEND_REPLY_START = "  void SendReplyFor%(name)s(%(receive_params)s) {%(serialize_reply)s"
+CLIENT_RPC_SEND_REPLY_END = "    Send();\n  }"
+CLIENT_RPC_REPLY_PARSE_START = "  void Parse%(name)sReply(OutputCursor* cursor) {%(unserialize_reply)s"
+CLIENT_RPC_REPLY_PARSE_END = "    Process%(name)sReply(%(receive_unqual)s);\n  }"
+
 
 INTERFACE_END = "};"
 
@@ -99,64 +105,85 @@ class Rpc(object):
     send_args = []
     for send in self.sends:
       send_args.append(send.GetSendType() + " " + send.name)
+    send_unqual = [s.name for s in self.sends]
 
     receive_args = []
     for recv in self.receives:
       receive_args.append(recv.GetReceiveType() + " " + recv.name)
+    receive_unqual = [s.name for s in self.receives]
 
-    return ", ".join(send_args) or "void", ", ".join(receive_args) or "void",
+    return (", ".join(send_args) or "void",
+            ", ".join(send_unqual),
+            ", ".join(receive_args) or "void",
+            ", ".join(receive_unqual))
 
   def GetSerializationCode(self, num, sends, receives):
-    send_args = ["    " + "EncodeToBuffer(static_cast<int16_t>(" + str(num) + "), SendCursor());"]
+    serialize_request = ["    " + "EncodeToBuffer(static_cast<int16_t>(" + str(num) + "), SendCursor());"]
     for send in sends:
-      send_args.append("    " + send.GetSerializationCode())
+      serialize_request.append("    " + "\n    ".join(send.GetSerializationCode()))
+    unserialize_request = []
+    for send in sends:
+      unserialize_request.append("    " + "\n    ".join(send.GetUnserializationCode()))
 
-    receive_args = []
+    serialize_reply = ["    " + "EncodeToBuffer(static_cast<int16_t>(" + str(-num) + "), SendCursor());"]
     for recv in receives:
-      receive_args.append("    " + recv.GetUnserializationCode())
-    
-    if send_args:
-      send_args = "\n" + "\n".join(send_args)
+      serialize_reply.append("    " + "\n    ".join(recv.GetSerializationCode()))
+    unserialize_reply = []
+    for recv in receives:
+      unserialize_reply.append("    " + "\n    ".join(recv.GetUnserializationCode()))
+
+    if serialize_reply:
+      serialize_reply = "\n" + "\n".join(serialize_reply)
     else:
-      send_args = ""
-    if receive_args:
-      receive_args = "\n" + "\n".join(receive_args)
+      serialize_reply = ""
+    if serialize_request:
+      serialize_request = "\n" + "\n".join(serialize_request)
     else:
-      receive_args = ""
-    return send_args, receive_args
+      serialize_request = ""
+
+    if unserialize_reply:
+      unserialize_reply = "\n" + "\n".join(unserialize_reply)
+    else:
+      unserialize_reply = ""
+    if unserialize_request:
+      unserialize_request = "\n" + "\n".join(unserialize_request)
+    else:
+      unserialize_request = ""
+
+    return serialize_reply, serialize_request, unserialize_reply, unserialize_request
+
+  def GetExpansionDict(self, num, sends, receives):
+    send_args, send_unqual, receive_args, receive_unqual = self.GetArguments()
+    (serialize_reply, serialize_request,
+     unserialize_reply, unserialize_request) = self.GetSerializationCode(
+        num, sends, receives)
+
+    args = {
+      "name": self.name,
+      "serialize_request": serialize_request,
+      "serialize_reply": serialize_reply,
+      "unserialize_reply": unserialize_reply,
+      "unserialize_request": unserialize_request,
+      "send_params": send_args,
+      "send_unqual": send_unqual,
+      "receive_unqual": receive_unqual,
+      "receive_params": receive_args,
+    }
+    return args
 
   def GetClientSendInterface(self, num):
-    send_args, receive_args = self.GetArguments()
-    send_serialization, receive_serialization = self.GetSerializationCode(
-        num, self.sends, self.receives)
-
-    args = {
-      "client_rpc_name": self.name,
-      "client_send_serialization": send_serialization,
-      "client_receive_serialization": receive_serialization,
-      "client_rpc_send_params": send_args,
-      "client_rpc_receive_params": receive_args,
-    }
-    to_implement = [CLIENT_RPC_REPLY % args]
-    public = [CLIENT_RPC_SEND_START % args, CLIENT_RPC_SEND_END % args]
-    return to_implement, public, []
+    args = self.GetExpansionDict(num, self.sends, self.receives)
+    to_implement = [CLIENT_RPC_REPLY_DISPATCH % args]
+    public = [CLIENT_RPC_SEND_REQUEST_START % args, CLIENT_RPC_SEND_REQUEST_END % args]
+    private = [CLIENT_RPC_REPLY_PARSE_START % args, CLIENT_RPC_REPLY_PARSE_END % args]
+    return to_implement, public, private
 
   def GetClientReceiveInterface(self, num):
-    send_args, receive_args = self.GetArguments()
-    send_serialization, receive_serialization = self.GetSerializationCode(
-        -num, self.receives, self.sends)
-
-    args = {
-      "client_rpc_name": self.name,
-      "client_send_serialization": send_serialization,
-      "client_receive_serialization": receive_serialization,
-      "client_rpc_send_params": send_args,
-      "client_rpc_receive_params": receive_args,
-    }
-
-    to_implement = [CLIENT_RPC_RECEIVE % args]
-    public = [CLIENT_RPC_REPLY_START % args, CLIENT_RPC_REPLY_END % args]
-    return to_implement, public, []
+    args = self.GetExpansionDict(num, self.sends, self.receives)
+    to_implement = [CLIENT_RPC_REQUEST_DISPATCH % args]
+    public = [CLIENT_RPC_SEND_REPLY_START % args, CLIENT_RPC_SEND_REPLY_END % args]
+    private = [CLIENT_RPC_REQUEST_PARSE_START % args, CLIENT_RPC_REQUEST_PARSE_END % args]
+    return to_implement, public, private
 
 
 class Parameter(object):
@@ -164,10 +191,11 @@ class Parameter(object):
     self.name = name
 
   def GetSerializationCode(self):
-    return "EncodeToBuffer(" + self.name + ", SendCursor());"
+    return ["EncodeToBuffer(" + self.name + ", SendCursor());"]
 
   def GetUnserializationCode(self):
-    return "DecodeFromBuffer(ReceiveCursor(), &" + self.name + ");"
+    return ["%s %s;" % (self.GetSimpleType(), self.name),
+            "DecodeFromBuffer(cursor, &%s);" % (self.name)]
 
 
 class StringParameter(Parameter):
@@ -185,6 +213,9 @@ class Repeated(Parameter):
   def __init__(self, other):
     self.name = other.name
     self.other = other
+
+  def GetSimpleType(self):
+    return "vector<" + self.other.GetSimpleType() + ">"
 
   def GetSendType(self):
     return "const vector<" + self.other.GetSimpleType() + ">&"
