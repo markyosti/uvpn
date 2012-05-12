@@ -19,9 +19,11 @@ the requests. The generated code is asynchronous.
 """
 
 import argparse
+import datetime
 import os
 import sys
 import definitions
+import textwrap
 
 class InterfaceGenerator(object):
   def __init__(self):
@@ -74,10 +76,21 @@ def main(argv):
   parser.add_argument(
       "--server-template", "-s", type=str, nargs=1, default="%(filename)s-server.h",
       help="Template for the name of the server interface file to generate.")
-      
+
+  BANNER = textwrap.dedent("""\
+      // Generated automatically from %(input)s, on %(date)s
+      // by running "%(args)s"
+      // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***\n
+      """)
+
   args = parser.parse_args()
   for fname in args.files:
     short_name = os.path.splitext(os.path.basename(fname))[0]
+    banner = BANNER % {
+      "input": os.path.basename(fname),
+      "date": str(datetime.datetime.now()),
+      "args": " ".join([os.path.basename(sys.argv[0])] + sys.argv[1:])
+    }
 
     try:
       client_name = str(args.client_template) % {"filename": short_name}
@@ -101,7 +114,7 @@ def main(argv):
           "ERROR: %s, cannot generate client interface: %s" % (fname, str(e)))
 
     try:
-      open(client_name, "w").write(interfaces)
+      open(client_name, "w").write(banner + interfaces)
       print "  + file %s written" % (client_name)
     except IOError as e:
       print >>sys.stderr, (
@@ -115,7 +128,7 @@ def main(argv):
           "ERROR: %s, cannot generate server interface: %s" % (fname, str(e)))
 
     try:
-      open(server_name, "w").write(interfaces)
+      open(server_name, "w").write(banner + interfaces)
       print "  + file %s written" % (server_name)
     except IOError as e:
       print >>sys.stderr, (
