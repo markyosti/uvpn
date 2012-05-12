@@ -59,6 +59,14 @@ inline bool DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
   return true;
 }
 
+inline bool DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
+  int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
+  if (retval != sizeof(*num))
+    return false;
+  *num = ntohs(*num);
+  return true;
+}
+
 inline bool DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
   if (retval != sizeof(*num))
