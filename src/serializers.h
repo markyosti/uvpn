@@ -21,6 +21,11 @@ inline void EncodeToBuffer(uint32_t num, InputCursor* cursor) {
   cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
 }
 
+inline void EncodeToBuffer(int16_t num, InputCursor* cursor) {
+  num = htons(num);
+  cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
+}
+
 inline void EncodeToBuffer(uint16_t num, InputCursor* cursor) {
   num = htons(num);
   cursor->Add(reinterpret_cast<char*>(&num), sizeof(num));
