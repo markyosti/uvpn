@@ -85,6 +85,7 @@ def main(argv):
 
   args = parser.parse_args()
   for fname in args.files:
+    directory = os.path.dirname(fname)
     short_name = os.path.splitext(os.path.basename(fname))[0]
     banner = BANNER % {
       "input": os.path.basename(fname),
@@ -93,8 +94,10 @@ def main(argv):
     }
 
     try:
-      client_name = str(args.client_template) % {"filename": short_name}
-      server_name = str(args.server_template) % {"filename": short_name}
+      client_name = os.path.join(
+          directory, str(args.client_template) % {"filename": short_name})
+      server_name = os.path.join(
+          directory, str(args.server_template) % {"filename": short_name})
     except KeyError as e:
       parser.error(
           "invalid --client-name or --server-name: unknown key %s" % str(e))

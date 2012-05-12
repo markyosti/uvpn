@@ -1,5 +1,5 @@
-// Generated automatically from daemon-controller.ipc, on 2012-05-12 12:47:44.398388
-// by running "generator.py ./daemon-controller.ipc"
+// Generated automatically from daemon-controller.ipc, on 2012-05-12 14:35:30.710290
+// by running "generator.py ipc/daemon-controller.ipc"
 // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***
 
 class DaemonControllerServerIpc : public IpcServerInterface {
@@ -43,7 +43,7 @@ class DaemonControllerServerIpc : public IpcServerInterface {
 
   // This is the method that will dispatch the incoming requests.
   int Dispatch(OutputCursor* cursor) {
-    uint16_t num;
+    int16_t num;
     if (!DecodeFromBuffer(cursor, &num)) {
       // TODO: error handling
       return -1;
