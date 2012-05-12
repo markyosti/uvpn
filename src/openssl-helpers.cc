@@ -68,8 +68,11 @@ void BigNumberContext::Mul(
     LOG_FATAL("BN_add failed! %ld", ERR_get_error());
 }
 
-void EncodeToBuffer(const BigNumber& bn, InputCursor* cursor) {
+bool EncodeToBuffer(const BigNumber& bn, InputCursor* cursor) {
   int size = BN_num_bytes(bn.Get());
+  if (size > numeric_limits<uint16_t>::max())
+    return false;
+
   EncodeToBuffer(static_cast<uint16_t>(size), cursor);
   cursor->Reserve(size);
   BN_bn2bin(bn.Get(), reinterpret_cast<unsigned char*>(cursor->Data()));
@@ -79,6 +82,7 @@ void EncodeToBuffer(const BigNumber& bn, InputCursor* cursor) {
   string debug;
   bn.ExportAsHex(&debug);
   LOG_DEBUG("sent bignumber %s", debug.c_str());
+  return true;
 }
 
 bool DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn) {

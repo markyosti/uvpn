@@ -36,7 +36,7 @@ inline bool EncodeToBuffer(uint16_t num, InputCursor* cursor) {
 }
 
 inline bool EncodeToBuffer(const char* str, int size, InputCursor* cursor) {
-  if (size >= numeric_limits<uint16_t>::max())
+  if (size > numeric_limits<uint16_t>::max())
     return false;
 
   EncodeToBuffer(static_cast<uint16_t>(size), cursor);
@@ -45,7 +45,7 @@ inline bool EncodeToBuffer(const char* str, int size, InputCursor* cursor) {
 }
 
 inline bool EncodeToBuffer(const string& str, InputCursor* cursor) {
-  if (str.size() >= numeric_limits<uint16_t>::max())
+  if (str.size() > numeric_limits<uint16_t>::max())
     return false;
 
   EncodeToBuffer(static_cast<uint16_t>(str.size()), cursor);
@@ -64,13 +64,6 @@ inline bool EncodeToBuffer(
   }
   return true;
 }
-
-// When parsing data, there are 3 possible outcomes:
-//   - everything is good.
-//   - need more data, we don't have enough.
-//   - we have all the data we need, but it is invalid.
-// Additionally, if we need more data, we should tell the caller how much
-// more data is needed, so it can call us when there is enough available.
 
 inline bool DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
@@ -146,7 +139,7 @@ inline bool DecodeFromBuffer(
 template<typename ELEMENT>
 inline bool EncodeToBuffer(
     const vector<ELEMENT>& data, InputCursor* cursor) {
-  if (data.size() >= numeric_limits<uint16_t>::max())
+  if (data.size() > numeric_limits<uint16_t>::max())
     return false;
 
   EncodeToBuffer(static_cast<uint16_t>(data.size()), cursor);
