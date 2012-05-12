@@ -608,7 +608,10 @@ uvpn-ctl.o: uvpn-ctl.cc \
 	yaarg.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
-	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
+	ipc-client.h \
+	serializers.h \
+	ipc/daemon-controller-client.h
 uvpn-ip-config.o: uvpn-ip-config.cc \
 	base.h \
 	errors.h \
@@ -787,6 +790,8 @@ deps: \
 	uvpn-ctl.h \
 	yaarg.h \
 	uvpn-ctl-main.cc \
+	ipc-client.h \
+	ipc/daemon-controller-client.h \
 	uvpn-ctl.cc \
 	uvpn-ip-config.cc \
 	uvpn-server.cc \

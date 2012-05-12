@@ -28,6 +28,9 @@
 
 #include "uvpn-ctl.h"
 
+#include "ipc-client.h"
+#include "ipc/daemon-controller-client.h"
+
 UvpnCtl::UvpnCtl(ConfigParser* parser)
     : type_(
           parser, Option::Default, "type", "t", "client",
