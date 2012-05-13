@@ -56,9 +56,17 @@ void SrpClientAuthenticator::AuthenticationSession::HelloCallback(
     ClientConnectedSession* connection, OutputCursor* cursor) {
   LOG_DEBUG("parsing hello");
 
-  if (!session_.ParseServerHello(cursor)) {
-    LOG_FATAL("parse server hello failed");
+  OutputCursor parsed(*cursor);
+  int missing = session_.ParseServerHello(&parsed);
+  if (missing < 0) {
     // TODO: handle errors.
+    LOG_FATAL("parse server hello failed");
+    return;
+  }
+
+  if (missing > 0) {
+    // TODO: handle need more data.
+    LOG_ERROR("need more data");
     return;
   }
 
@@ -72,9 +80,15 @@ void SrpClientAuthenticator::AuthenticationSession::PublicKeyCallback(
     ClientConnectedSession* connection, OutputCursor* cursor) {
   LOG_DEBUG("parsing public key");
 
-  if (!session_.ParseServerPublicKey(cursor)) {
-    LOG_FATAL("invalid server public key");
+  int result = session_.ParseServerPublicKey(cursor);
+  if (result < 0) {
     // TODO: handle errors.
+    LOG_FATAL("invalid server public key");
+    return;
+  }
+  if (result > 0) {
+    // TODO: handle need more data.
+    LOG_ERROR("need more data");
     return;
   }
 

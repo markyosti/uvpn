@@ -67,7 +67,7 @@ TEST(SrpInteractions, VerifyHandshake) {
   srp_server.FillServerHello(buffer.Input());
   LOG_DEBUG("server hello size: %d", buffer.Output()->LeftSize());
 
-  EXPECT_TRUE(srp_client.ParseServerHello(buffer.Output()));
+  EXPECT_EQ(0, srp_client.ParseServerHello(buffer.Output()));
   EXPECT_TRUE(srp_client.FillClientPublicKey(buffer.Input()));
   LOG_DEBUG("client public key: %d", buffer.Output()->LeftSize());
 
@@ -75,7 +75,7 @@ TEST(SrpInteractions, VerifyHandshake) {
   EXPECT_TRUE(srp_server.FillServerPublicKey(buffer.Input()));
   LOG_DEBUG("server public key: %d", buffer.Output()->LeftSize());
 
-  EXPECT_TRUE(srp_client.ParseServerPublicKey(buffer.Output()));
+  EXPECT_EQ(0, srp_client.ParseServerPublicKey(buffer.Output()));
 
   ScopedPassword server_private_key, client_private_key;
   EXPECT_TRUE(srp_server.GetPrivateKey(&server_private_key));

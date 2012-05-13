@@ -17,14 +17,14 @@ class SrpClientSession {
   // Sends user's name to the server.
   void FillClientHello(InputCursor* clienthello);
   // Gets the prime to use and the salt from the server.
-  bool ParseServerHello(OutputCursor* serverhello);
+  int ParseServerHello(OutputCursor* serverhello);
 
   // Based on the prime above and a random number, generates a "public key"
   // which is sent to the server.
   bool FillClientPublicKey(InputCursor* clientkey);
   // Reads the public key calculated by the server, based on a random number,
   // and the secret record of the user.
-  bool ParseServerPublicKey(OutputCursor* serverkey);
+  int ParseServerPublicKey(OutputCursor* serverkey);
 
   // Finally, calculates a private key, using the user's password. Note that
   // at this point, if everything went well, the server calculated the *same*

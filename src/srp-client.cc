@@ -17,27 +17,27 @@ void SrpClientSession::FillClientHello(InputCursor* username) {
 
 // TODO: disitinguish between 'false, I don't have enough data' from
 // 'false, I received crap'!
-bool SrpClientSession::ParseServerHello(OutputCursor* serverhello) {
+int SrpClientSession::ParseServerHello(OutputCursor* serverhello) {
   uint16_t index;
   int missing;
   missing = DecodeFromBuffer(serverhello, &index);
   if (missing) {
     LOG_DEBUG("could not read index");
-    return false;
+    return missing;
   }
   string salt;
   missing = DecodeFromBuffer(serverhello, &salt);
   if (missing) {
     LOG_DEBUG("could not read salt");
-    return false;
+    return missing;
   }
   if (!primes_.ValidIndex(index)) {
     LOG_DEBUG("invalid index");
-    return false;
+    return -1;
   }
   if (salt.size() < 8) {
     LOG_DEBUG("salt too small");
-    return false;
+    return -1;
   }
 
   salt_ = salt;
@@ -45,7 +45,7 @@ bool SrpClientSession::ParseServerHello(OutputCursor* serverhello) {
 
   // TODO(SECURITY,DEBUG): remove this.
   LOG_DEBUG("index: %d, salt: %s",  index, ConvertToHex(salt_.c_str(), salt_.size()).c_str());
-  return true;
+  return 0;
 }
 
 bool SrpClientSession::FillClientPublicKey(InputCursor* clientkey) {
@@ -68,9 +68,7 @@ bool SrpClientSession::FillClientPublicKey(InputCursor* clientkey) {
   return true;
 }
 
-// TODO: disitinguish between 'false, I don't have enough data' from
-// 'false, I received crap'!
-bool SrpClientSession::ParseServerPublicKey(OutputCursor* serverkey) {
+int SrpClientSession::ParseServerPublicKey(OutputCursor* serverkey) {
   //   The premaster secret is calculated by the client as follows:
   //        *I, P = <read from user>
   //        *a = random()
@@ -83,11 +81,11 @@ bool SrpClientSession::ParseServerPublicKey(OutputCursor* serverkey) {
   int missing = DecodeFromBuffer(serverkey, &B_);
   if (missing) {
     LOG_DEBUG("error while parsing server public key");
-    return false;
+    return missing;
   }
   LOG_DEBUG("server public key read");
   // TODO: verify B mod N, MUST be != 0
-  return true;
+  return 0;
 }
 
 bool SrpClientSession::GetPrivateKey(
