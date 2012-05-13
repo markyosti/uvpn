@@ -52,7 +52,7 @@ TEST(BigNumberTest, Buffer) {
   EncodeToBuffer(bn, buffer.Input());
 
   BigNumber check;
-  EXPECT_TRUE(DecodeFromBuffer(buffer.Output(), &check));
+  EXPECT_EQ(0, DecodeFromBuffer(buffer.Output(), &check));
 
   string exported;
   check.ExportAsAscii(&exported);

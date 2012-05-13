@@ -25,7 +25,7 @@ void TunTapClientChannel::ServerConfigCallback(
   LOG_DEBUG();
 
   uint8_t flags;
-  if (!DecodeFromBuffer(cursor, &flags)) {
+  if (DecodeFromBuffer(cursor, &flags)) {
     LOG_ERROR("could not read flags");
     // TODO: handle error.
     return;
@@ -33,7 +33,7 @@ void TunTapClientChannel::ServerConfigCallback(
 
   // The server will send us a list of (key, value) pairs.
   vector<pair<string, string> > values;
-  if (!DecodeFromBuffer(cursor, &values)) {
+  if (DecodeFromBuffer(cursor, &values)) {
     LOG_ERROR("could not read configs");
     // TODO: handle error.
     return;

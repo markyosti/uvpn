@@ -65,41 +65,40 @@ inline bool EncodeToBuffer(
   return true;
 }
 
-inline bool DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
+inline int DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval != sizeof(*num))
-    return false;
-  return true;
+  return sizeof(*num) - retval;
 }
 
-inline bool DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
+inline int DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval != sizeof(*num))
-    return false;
+  if (retval < sizeof(*num))
+    return sizeof(*num) - retval;
   *num = ntohs(*num);
-  return true;
+  return 0;
 }
 
-inline bool DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
+inline int DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval != sizeof(*num))
-    return false;
+  if (retval < sizeof(*num))
+    return sizeof(*num) - retval;
   *num = ntohs(*num);
-  return true;
+  return 0;
 }
 
-inline bool DecodeFromBuffer(OutputCursor* cursor, uint32_t* num) {
+inline int DecodeFromBuffer(OutputCursor* cursor, uint32_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval != sizeof(*num))
-    return false;
+  if (retval < sizeof(*num))
+    return sizeof(*num) - retval;
   *num = ntohl(*num);
-  return true;
+  return 0;
 }
 
-inline bool DecodeFromBuffer(OutputCursor* cursor, string* str) {
+inline int DecodeFromBuffer(OutputCursor* cursor, string* str) {
   uint16_t size;
-  if (!DecodeFromBuffer(cursor, &size))
-    return false;
+  int result = DecodeFromBuffer(cursor, &size);
+  if (result)
+    return result;
   return cursor->GetString(str, size);
 }
 
@@ -111,29 +110,35 @@ inline void EncodeToBuffer(
 }
 
 template<typename FIRST, typename SECOND>
-inline bool DecodeFromBuffer(
+inline int DecodeFromBuffer(
     OutputCursor* cursor, pair<FIRST, SECOND>* tuple) {
-  return DecodeFromBuffer(cursor, &(tuple->first)) &&
-         DecodeFromBuffer(cursor, &(tuple->second));
+  int result;
+  result = DecodeFromBuffer(cursor, &(tuple->first));
+  if (result)
+    return result;
+  return DecodeFromBuffer(cursor, &(tuple->second));
 }
 
 template<typename ELEMENT>
-inline bool DecodeFromBuffer(
+inline int DecodeFromBuffer(
     OutputCursor* cursor, vector<ELEMENT>* data) {
   uint16_t size;
-  if (!DecodeFromBuffer(cursor, &size))
-    return false;
+  int result;
+  result = DecodeFromBuffer(cursor, &size);
+  if (result)
+    return result;
   data->resize(size);
 
   for (int i = 0; i < size; ++i) {
     ELEMENT temp;
 
-    if (!DecodeFromBuffer(cursor, &temp))
-      return false;
+    int result = DecodeFromBuffer(cursor, &temp);
+    if (result)
+      return result + size - i;
     (*data)[i] = temp;
   }
 
-  return true;
+  return 0;
 }
 
 template<typename ELEMENT>

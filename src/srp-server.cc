@@ -4,9 +4,11 @@
 #include "srp-passwd.h"
 #include "conversions.h"
 
+// TODO: if it returns false, is that because the string is invalid,
+// or because we don't have enough data in initmessage?
 bool SrpServerSession::ParseClientHello(
     OutputCursor* initmessage, string* username) {
-  if (!DecodeFromBuffer(initmessage, username)) {
+  if (DecodeFromBuffer(initmessage, username)) {
     LOG_DEBUG("buffer does not contain username");
     return false;
   }
@@ -71,10 +73,12 @@ bool SrpServerSession::FillServerPublicKey(InputCursor* serverkey) {
   return true;
 }
 
+// TODO: if it returns false, is that because the string is invalid,
+// or because we don't have enough data in initmessage?
 bool SrpServerSession::ParseClientPublicKey(OutputCursor* clientkey) {
   LOG_DEBUG();
 
-  if (!DecodeFromBuffer(clientkey, &A_))
+  if (DecodeFromBuffer(clientkey, &A_))
     return false;
   // TODO: verify A mod N, MUST be != 0
   return true;

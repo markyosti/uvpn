@@ -222,7 +222,9 @@ BoundChannel::processing_state_e ServerTcpTranscoder::Connection::HandleRead() {
 
     // Read the size of the packet.
     uint16_t size;
-    if (!DecodeFromBuffer(&cleartext, &size)) {
+    int missing = DecodeFromBuffer(&cleartext, &size);
+    if (missing) {
+      // TODO: make sure that buffer is large enough on next round?
       LOG_DEBUG("not enough data to decode input size");
       return BoundChannel::MORE;
     }

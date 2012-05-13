@@ -212,7 +212,10 @@ BoundChannel::processing_state_e ClientTcpTranscoder::Connection::HandleRead() {
 
     // Read the size of the packet.
     uint16_t size;
-    if (!DecodeFromBuffer(&cleartext, &size)) {
+    int missing = DecodeFromBuffer(&cleartext, &size);
+    if (missing) {
+      // TODO: add something like below?
+      // from_server_encrypted_.Input()->Reserve(kReadSize);
       LOG_DEBUG("not enough data to decode input size");
       return BoundChannel::MORE;
     }

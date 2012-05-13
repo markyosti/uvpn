@@ -57,7 +57,7 @@ class BigNumber {
 };
 
 extern bool EncodeToBuffer(const BigNumber&, InputCursor* cursor);
-extern bool DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn);
+extern int DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn);
 
 class BigNumberContext {
  public:

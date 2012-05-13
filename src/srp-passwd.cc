@@ -68,13 +68,16 @@ void SrpSecret::ToSecret(string* secret) {
 bool SrpSecret::FromSecret(const string& username, const string& secret) {
   // We now have all the pieces we need, just glue them together.
   Buffer buffer;
-  // TODO: instead of copying into buffer, add support for "external chunks" in buffers.
-  //   (eg, a chunk that is not allocated internally, but that can point to a string or anything else)
+  // TODO: instead of copying into buffer, add support for "external chunks"
+  // in buffers. (eg, a chunk that is not allocated internally, but that can
+  // point to a string or anything else)
   buffer.Input()->Add(secret.c_str(), secret.size());
 
-  if (!DecodeFromBuffer(buffer.Output(), reinterpret_cast<uint16_t*>(&index_)) ||
-      !DecodeFromBuffer(buffer.Output(), &salt_) ||
-      !DecodeFromBuffer(buffer.Output(), &v_)) {
+  // TODO: did this fail because there is not enough data in buffer,
+  // or because of errors?
+  if (DecodeFromBuffer(buffer.Output(), reinterpret_cast<uint16_t*>(&index_)) ||
+      DecodeFromBuffer(buffer.Output(), &salt_) ||
+      DecodeFromBuffer(buffer.Output(), &v_)) {
     LOG_ERROR("error decoding %s", "data");
     return false;
   }

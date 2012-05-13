@@ -5,7 +5,7 @@ TEST(SerializerTest, EncodeString) {
   Buffer buffer;
   EncodeToBuffer("this is a test", buffer.Input());
   string str;
-  EXPECT_TRUE(DecodeFromBuffer(buffer.Output(), &str));
+  EXPECT_FALSE(DecodeFromBuffer(buffer.Output(), &str));
   EXPECT_EQ("this is a test", str);
 }
 
@@ -16,7 +16,7 @@ TEST(SerializerTest, EncodeDecodePairs) {
   EncodeToBuffer(tuple, buffer.Input());
 
   pair<string, uint32_t> value;
-  EXPECT_TRUE(DecodeFromBuffer(buffer.Output(), &value));
+  EXPECT_FALSE(DecodeFromBuffer(buffer.Output(), &value));
   EXPECT_EQ(tuple.first, value.first);
   EXPECT_EQ(tuple.second, value.second);
 }
@@ -31,7 +31,7 @@ TEST(SerializerTest, EncodeDecodeVector) {
   EncodeToBuffer(input, buffer.Input());
 
   vector<string> output;
-  EXPECT_TRUE(DecodeFromBuffer(buffer.Output(), &output));
+  EXPECT_FALSE(DecodeFromBuffer(buffer.Output(), &output));
   EXPECT_EQ("this", output[0]);
   EXPECT_EQ("is", output[1]);
   EXPECT_EQ("foo", output[2]);

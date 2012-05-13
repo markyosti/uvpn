@@ -85,18 +85,26 @@ bool EncodeToBuffer(const BigNumber& bn, InputCursor* cursor) {
   return true;
 }
 
-bool DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn) {
+int DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn) {
   uint16_t size;
-  if (!DecodeFromBuffer(cursor, &size)) {
-    LOG_ERROR("decoding size %d", size);
-    return false;
+  int missing = DecodeFromBuffer(cursor, &size);
+  if (missing) {
+    LOG_ERROR("too small, missing %d bytes", size);
+    return missing;
   }
   if (cursor->ContiguousSize() >= size) {
     BN_bin2bn(reinterpret_cast<const unsigned char*>(cursor->Data()), size, bn->Get());
     cursor->Increment(size);
   } else {
+    // If we don't have enough data, not much to do, we need more space.
+    if (cursor->LeftSize() < size) {
+      LOG_ERROR("less space than necessary, %d - %d", cursor->LeftSize(), size);
+      return size - cursor->LeftSize();
+    }
+
     // If the data is not contiguous in the buffer, we must make it contiguous
     // (in a temporary buffer), and then parse it.
+    // TODO: we can do better than this...
     string temp;
     cursor->GetString(&temp, size);
     bn->SetFromBinary(temp);
@@ -106,7 +114,7 @@ bool DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn) {
   string debug;
   bn->ExportAsHex(&debug);
   LOG_DEBUG("received bignumber %s", debug.c_str());
-  return true;
+  return 0;
 }
 
 BigNumber::BigNumber() {

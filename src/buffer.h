@@ -150,7 +150,7 @@ class OutputCursor {
   // Increment()ed by the amount of data read.
   unsigned int Get(char* buffer, unsigned int size);
   void GetString(string* str);
-  bool GetString(string* str, unsigned int size);
+  int GetString(string* str, unsigned int size);
 
   // How many bytes can be read in one go from Data() now?
   unsigned int ContiguousSize() const;
@@ -424,7 +424,7 @@ inline void OutputCursor::GetString(string* str) {
   GetString(str, LeftSize());
 }
 
-inline bool OutputCursor::GetString(string* str, unsigned int size) {
+inline int OutputCursor::GetString(string* str, unsigned int size) {
   str->reserve(size);
 
   unsigned int tocopy;
@@ -437,7 +437,7 @@ inline bool OutputCursor::GetString(string* str, unsigned int size) {
     left -= tocopy;
   }
 
-  return !left;
+  return left;
 }
 
 inline BufferChunk* ChunkSet::Unreference(BufferChunk* chunk) {

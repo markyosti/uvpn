@@ -15,14 +15,19 @@ void SrpClientSession::FillClientHello(InputCursor* username) {
   EncodeToBuffer(username_, username);
 }
 
+// TODO: disitinguish between 'false, I don't have enough data' from
+// 'false, I received crap'!
 bool SrpClientSession::ParseServerHello(OutputCursor* serverhello) {
   uint16_t index;
-  if (!DecodeFromBuffer(serverhello, &index)) {
+  int missing;
+  missing = DecodeFromBuffer(serverhello, &index);
+  if (missing) {
     LOG_DEBUG("could not read index");
     return false;
   }
   string salt;
-  if (!DecodeFromBuffer(serverhello, &salt)) {
+  missing = DecodeFromBuffer(serverhello, &salt);
+  if (missing) {
     LOG_DEBUG("could not read salt");
     return false;
   }
@@ -63,6 +68,8 @@ bool SrpClientSession::FillClientPublicKey(InputCursor* clientkey) {
   return true;
 }
 
+// TODO: disitinguish between 'false, I don't have enough data' from
+// 'false, I received crap'!
 bool SrpClientSession::ParseServerPublicKey(OutputCursor* serverkey) {
   //   The premaster secret is calculated by the client as follows:
   //        *I, P = <read from user>
@@ -73,7 +80,8 @@ bool SrpClientSession::ParseServerPublicKey(OutputCursor* serverkey) {
   //        *k = SHA1(N | PAD(g))
   //        *x = SHA1(s | SHA1(I | ":" | P))
   //        <premaster secret> = (B - (k * g^x)) ^ (a + (u * x)) % N
-  if (!DecodeFromBuffer(serverkey, &B_)) {
+  int missing = DecodeFromBuffer(serverkey, &B_);
+  if (missing) {
     LOG_DEBUG("error while parsing server public key");
     return false;
   }
