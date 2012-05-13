@@ -4,17 +4,20 @@
 #include "srp-passwd.h"
 #include "conversions.h"
 
-// TODO: if it returns false, is that because the string is invalid,
-// or because we don't have enough data in initmessage?
-bool SrpServerSession::ParseClientHello(
+int SrpServerSession::ParseClientHello(
     OutputCursor* initmessage, string* username) {
-  if (DecodeFromBuffer(initmessage, username)) {
-    LOG_DEBUG("buffer does not contain username");
-    return false;
+  int result = DecodeFromBuffer(initmessage, username);
+  if (result < 0) {
+    LOG_DEBUG("invalid buffer for username");
+    return result;
+  }
+  if (result > 0) {
+    LOG_DEBUG("need more data in buffer");
+    return result;
   }
 
   LOG_DEBUG("parsed hello %s", username->c_str());
-  return true;
+  return 0;
 }
 
 SrpServerSession::SrpServerSession(Prng* prng, BigNumberContext* bnctx)
@@ -73,15 +76,17 @@ bool SrpServerSession::FillServerPublicKey(InputCursor* serverkey) {
   return true;
 }
 
-// TODO: if it returns false, is that because the string is invalid,
-// or because we don't have enough data in initmessage?
-bool SrpServerSession::ParseClientPublicKey(OutputCursor* clientkey) {
+int SrpServerSession::ParseClientPublicKey(OutputCursor* clientkey) {
   LOG_DEBUG();
 
-  if (DecodeFromBuffer(clientkey, &A_))
-    return false;
+  int result = DecodeFromBuffer(clientkey, &A_);
+  if (result) {
+    LOG_DEBUG("%d - either invalid key or need more data", result);
+    return result;
+  }
+
   // TODO: verify A mod N, MUST be != 0
-  return true;
+  return 0;
 }
 
 bool SrpServerSession::GetPrivateKey(ScopedPassword* secret) {

@@ -24,19 +24,20 @@ void AesSessionKey::SendSalt(InputCursor* cursor) {
   LOG_DEBUG("salt: %s", ConvertToHex(salt_, kKeyLengthInBytes).c_str());
 }
 
-bool AesSessionKey::RecvSalt(OutputCursor* cursor) {
+int AesSessionKey::RecvSalt(OutputCursor* cursor) {
   LOG_DEBUG();
 
   // Pseudo code: read salt from input buffer, apply PBKDF2 on key.
-  if (cursor->Get(salt_, AesSessionKey::kKeyLengthInBytes) < AesSessionKey::kKeyLengthInBytes) {
+  int result = cursor->Get(salt_, AesSessionKey::kKeyLengthInBytes);
+  if (result < AesSessionKey::kKeyLengthInBytes) {
     LOG_ERROR("no salt in buffer");
     // TODO: handle error.
-    return false;
+    return AesSessionKey::kKeyLengthInBytes - result;
   }
 
   LOG_DEBUG("salt: %s",
 	    ConvertToHex(salt_, AesSessionKey::kKeyLengthInBytes).c_str());
-  return true;
+  return 0;
 }
 
 void AesSessionKey::SetupKey(const ScopedPassword& secret) {

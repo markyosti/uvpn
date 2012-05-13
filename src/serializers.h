@@ -132,7 +132,7 @@ inline int DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
 
 inline int DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval < sizeof(*num))
+  if (retval < static_cast<int>(sizeof(*num)))
     return sizeof(*num) - retval;
   *num = ntohs(*num);
   return 0;
@@ -140,7 +140,7 @@ inline int DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
 
 inline int DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval < sizeof(*num))
+  if (retval < static_cast<int>(sizeof(*num)))
     return sizeof(*num) - retval;
   *num = ntohs(*num);
   return 0;
@@ -148,7 +148,7 @@ inline int DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
 
 inline int DecodeFromBuffer(OutputCursor* cursor, uint32_t* num) {
   int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
-  if (retval < sizeof(*num))
+  if (retval < static_cast<int>(sizeof(*num)))
     return sizeof(*num) - retval;
   *num = ntohl(*num);
   return 0;

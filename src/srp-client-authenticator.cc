@@ -70,6 +70,7 @@ void SrpClientAuthenticator::AuthenticationSession::HelloCallback(
     return;
   }
 
+  cursor->Increment(cursor->LeftSize() - parsed.LeftSize());
   session_.FillClientPublicKey(connection->Message());
   // TODO: do something if connection is closed!
   connection->SetCallbacks(&server_public_key_callback_, NULL);
@@ -80,7 +81,8 @@ void SrpClientAuthenticator::AuthenticationSession::PublicKeyCallback(
     ClientConnectedSession* connection, OutputCursor* cursor) {
   LOG_DEBUG("parsing public key");
 
-  int result = session_.ParseServerPublicKey(cursor);
+  OutputCursor parsed(*cursor);
+  int result = session_.ParseServerPublicKey(&parsed);
   if (result < 0) {
     // TODO: handle errors.
     LOG_FATAL("invalid server public key");
@@ -114,11 +116,14 @@ void SrpClientAuthenticator::AuthenticationSession::PublicKeyCallback(
   LOG_DEBUG("secret: %s", ConvertToHex(key.Data(), key.Used()).c_str());
 
   AesSessionKey aeskey(prng_);
-  if (!aeskey.RecvSalt(cursor)) {
+  result = aeskey.RecvSalt(&parsed);
+  if (result) {
     LOG_FATAL("could not setup key");
     // TODO: handle errors.
     return;
   }
+
+  cursor->Increment(cursor->LeftSize() - parsed.LeftSize());
 
   aeskey.SetupKey(key);
   AesSessionEncoder* encoder(new AesSessionEncoder(prng_, aeskey));

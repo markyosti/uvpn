@@ -52,7 +52,7 @@ TEST(SrpInteractions, VerifyHandshake) {
   LOG_DEBUG("client hello size: %d", buffer.Output()->LeftSize());
 
   string username;
-  EXPECT_TRUE(srp_server.ParseClientHello(buffer.Output(), &username));
+  EXPECT_EQ(0, srp_server.ParseClientHello(buffer.Output(), &username));
   EXPECT_EQ("foouser", username);
 
   // Build a valid secret for the user.
@@ -71,7 +71,7 @@ TEST(SrpInteractions, VerifyHandshake) {
   EXPECT_TRUE(srp_client.FillClientPublicKey(buffer.Input()));
   LOG_DEBUG("client public key: %d", buffer.Output()->LeftSize());
 
-  EXPECT_TRUE(srp_server.ParseClientPublicKey(buffer.Output()));
+  EXPECT_EQ(0, srp_server.ParseClientPublicKey(buffer.Output()));
   EXPECT_TRUE(srp_server.FillServerPublicKey(buffer.Input()));
   LOG_DEBUG("server public key: %d", buffer.Output()->LeftSize());
 

@@ -44,11 +44,11 @@ class SrpServerSession {
  public:
   SrpServerSession(Prng* prng, BigNumberContext* context);
 
-  static bool ParseClientHello(OutputCursor* hellomessage, string* username);
+  static int ParseClientHello(OutputCursor* hellomessage, string* username);
   bool InitSession(const string& username, const string& secret);
 
   bool FillServerHello(InputCursor* serverhello);
-  bool ParseClientPublicKey(OutputCursor* clientkey);
+  int ParseClientPublicKey(OutputCursor* clientkey);
 
   bool FillServerPublicKey(InputCursor* serverkey);
   bool GetPrivateKey(ScopedPassword* secret);

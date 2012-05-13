@@ -15,7 +15,7 @@ class AesSessionKey {
   ~AesSessionKey();
 
   void SendSalt(InputCursor* output);
-  bool RecvSalt(OutputCursor* output);
+  int RecvSalt(OutputCursor* output);
 
   // Needs to be called after a salt has been sent or received.
   void SetupKey(const ScopedPassword& secret);

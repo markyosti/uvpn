@@ -41,9 +41,16 @@ void SrpServerAuthenticator::AuthenticationSession::StartAuthentication(
     ServerConnectedSession* connection, OutputCursor* cursor) {
   LOG_DEBUG();
 
-  if (!srps_.ParseClientHello(cursor, &username_)) {
-    LOG_FATAL("failed to parse hello");
+  OutputCursor parsed(*cursor);
+  int result = srps_.ParseClientHello(&parsed, &username_);
+  if (result < 0) {
     // TODO: handle error
+    LOG_FATAL("failed to parse hello");
+    return;
+  }
+  if (result > 0) {
+    // TODO: handle error
+    LOG_FATAL("need more data");
     return;
   }
 
@@ -74,6 +81,7 @@ void SrpServerAuthenticator::AuthenticationSession::StartAuthentication(
     return;
   }
 
+  cursor->Increment(cursor->LeftSize() - parsed.LeftSize());
   connection->SetCallbacks(&parse_public_key_callback_, &close_callback_);
 }
 
@@ -81,9 +89,16 @@ void SrpServerAuthenticator::AuthenticationSession::ParsePublicKeyCallback(
     ServerConnectedSession* connection, OutputCursor* cursor) {
   LOG_DEBUG();
 
-  if (!srps_.ParseClientPublicKey(cursor)) {
+  OutputCursor parsed(*cursor);
+  int result = srps_.ParseClientPublicKey(&parsed);
+  if (result < 0) {
     LOG_FATAL("parse public key failed");
     // TODO: handle error
+    return;
+  }
+  if (result > 0) {
+    // TODO: handle error
+    LOG_ERROR("need more data");
     return;
   }
 
@@ -103,6 +118,8 @@ void SrpServerAuthenticator::AuthenticationSession::ParsePublicKeyCallback(
     LOG_DEBUG("send message failed");
     return;
   }
+
+  cursor->Increment(cursor->LeftSize() - parsed.LeftSize());
 
   // TODO(SECURITY): this MUST happen AFTER client supplied its password, as it's costly.
   // TODO(SECURITY): also, this doesn't seem the best idea. It'd be great if we had something
