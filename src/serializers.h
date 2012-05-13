@@ -1,3 +1,63 @@
+// Copyright (c) 2008,2009,2010,2011 Mark Moreno (kramonerom@gmail.com).
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//    1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 
+//    2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+// 
+// THIS SOFTWARE IS PROVIDED BY Mark Moreno ''AS IS'' AND ANY EXPRESS OR
+// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+// EVENT SHALL Mark Moreno OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// 
+// The views and conclusions contained in the software and documentation are
+// those of the authors and should not be interpreted as representing official
+// policies, either expressed or implied, of Mark Moreno.
+
+//
+// This file contains methods to serialize and unserialize C data types
+// into a buffer. Methods are inlined, and generally very simple, they
+// should be fairly efficient on most platforms, as long as you stay
+// away from strings or types that require memory allocations.
+//
+// To serialize data into a buffer, you can use something like:
+//
+//   bool succeeded = EncodeToBuffer(whatever, my_input_cursor);
+//
+// Where whatever is any type, and my_input_cursor is an InputCursor.
+// Encoders return false if the type can't be encoded. It's generally
+// a rare occurrence, but can happen if, for example, a string or an
+// array is too long. To add a new Encoder, just declare it somewhere.
+// There's nothing magic, plain overloading.
+//
+// To unserialize data, use something like:
+//
+//   string value;
+//   int status = DecodeFromBuffer(my_output_cursor, &value);
+//
+// As per EncodeToBuffer above, value can be of any supported type.
+// my_output_cursor is an OutputCursor. The status is:
+//
+// < 0 - if there was some error performing the conversion.
+//   0 - if everything went smoothly, conversion successfully happened.
+// > 0 - if more data is required to complete the conversion. Note that
+//       the value is a *hint* of how much more data will be needed. It
+//       is guaranteed to be <= the number of additional bytes actually
+//       needed.
+//
+
 #ifndef SERIALIZERS_H
 # define SERIALIZERS_H
 
