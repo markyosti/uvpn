@@ -49,6 +49,12 @@ void BigNumberContext::ModMul(
     LOG_FATAL("BN_add failed! %ld", ERR_get_error());
 }
 
+void BigNumberContext::Mod(
+    BigNumber* result, const BigNumber& base, const BigNumber& module) {
+  if (!BN_mod(result->Get(), base.Get(), module.Get(), bn_ctx_))
+    LOG_FATAL("BN_add failed! %ld", ERR_get_error());
+}
+
 void BigNumberContext::ModAdd(
     BigNumber* result, const BigNumber& base, const BigNumber& add,
     const BigNumber& module) {
@@ -66,6 +72,15 @@ void BigNumberContext::Mul(
     BigNumber* result, const BigNumber& base, const BigNumber& mul) {
   if (!BN_mul(result->Get(), base.Get(), mul.Get(), bn_ctx_))
     LOG_FATAL("BN_add failed! %ld", ERR_get_error());
+}
+
+bool BigNumberContext::IsDivisibleBy(
+    const BigNumber& number, const BigNumber& divisor) {
+  BigNumber result;
+  Mod(&result, number, divisor);
+  if (result.IsZero())
+    return true;
+  return false;
 }
 
 bool EncodeToBuffer(const BigNumber& bn, InputCursor* cursor) {
@@ -181,6 +196,10 @@ void BigNumber::ExportAsHex(string* value) const {
   char* hex = BN_bn2hex(&bn_);
   value->assign(hex);
   OPENSSL_free(hex);
+}
+
+bool BigNumber::IsZero() const {
+  return BN_is_zero(&bn_);
 }
 
 Digest::Digest(const Engine& engine) {

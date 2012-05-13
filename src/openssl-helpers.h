@@ -49,6 +49,8 @@ class BigNumber {
   void ExportAsAscii(string* value) const;
   void ExportAsHex(string* value) const;
 
+  bool IsZero() const;
+
   BIGNUM* Get() { return &bn_; }
   const BIGNUM* Get() const { return &bn_; }
 
@@ -72,6 +74,8 @@ class BigNumberContext {
 	      const BigNumber& add, const BigNumber& module);
   void ModMul(BigNumber* result, const BigNumber& base,
 	      const BigNumber& mul, const BigNumber& module);
+  void Mod(BigNumber* result, const BigNumber& base,
+           const BigNumber& module);
 
   void Add(BigNumber* result, const BigNumber& add1, 
 	   const BigNumber& add2);
@@ -79,6 +83,8 @@ class BigNumberContext {
 	   const BigNumber& sub);
   void Mul(BigNumber* result, const BigNumber& base,
 	   const BigNumber& multiplier);
+
+  bool IsDivisibleBy(const BigNumber& number, const BigNumber& divisor);
 
  private:
   BN_CTX* bn_ctx_;

@@ -15,8 +15,6 @@ void SrpClientSession::FillClientHello(InputCursor* username) {
   EncodeToBuffer(username_, username);
 }
 
-// TODO: disitinguish between 'false, I don't have enough data' from
-// 'false, I received crap'!
 int SrpClientSession::ParseServerHello(OutputCursor* serverhello) {
   uint16_t index;
   int missing;
@@ -55,16 +53,21 @@ bool SrpClientSession::FillClientPublicKey(InputCursor* clientkey) {
   //  *g, generator.
   //  *N, prime number.
   //  *a, random number, at least 256 bits in length.
-  a_.SetFromRandom(prng_, kALength);
-  // TODO: A must be != 0
-
+  
+  // The loops below are extremely unlikely to ever be used, but the
+  // server is required to refuse numbers matching those parameters,
+  // as per rfc 5054.
   const BigNumber& g = primes_.GetGenerator(index_);
   const BigNumber& N = primes_.GetPrime(index_);
+  do {
+    do {
+      a_.SetFromRandom(prng_, kALength);
+    } while (a_.IsZero());
 
-  bnctx_->ModExp(&A_, g, a_, N);
+    bnctx_->ModExp(&A_, g, a_, N);
+  } while (bnctx_->IsDivisibleBy(A_, N));
+
   EncodeToBuffer(A_, clientkey);
-
-  // TODO: A mod N MUST be != 0
   return true;
 }
 
@@ -84,7 +87,13 @@ int SrpClientSession::ParseServerPublicKey(OutputCursor* serverkey) {
     return missing;
   }
   LOG_DEBUG("server public key read");
-  // TODO: verify B mod N, MUST be != 0
+
+  // Verify that N is not a divisor of B, otherwise we are in trouble.
+  const BigNumber& N = primes_.GetPrime(index_);
+  if (bnctx_->IsDivisibleBy(B_, N)) {
+    LOG_ERROR("B mod N is 0, invalid");
+    return -1;
+  }
   return 0;
 }
 

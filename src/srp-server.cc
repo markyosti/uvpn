@@ -64,12 +64,18 @@ bool SrpServerSession::FillServerPublicKey(InputCursor* serverkey) {
   BigNumber k;
   secret_.CalculateK(N, g, &k);
 
-  b_.SetFromRandom(prng_, kBLength);
+  // The IsZero checks below are extremely unlikely to ever trigger.
+  // RFC 5054, section 2.5.4.
+  do {
+    do {
+      b_.SetFromRandom(prng_, kBLength);
+    } while (b_.IsZero());
+
+    bnctx_->ModExp(&B_, g, b_, N);
+  } while (bnctx_->IsDivisibleBy(B_, N));
 
   BigNumber kv;
   bnctx_->ModMul(&kv, k, secret_.v(), N);
-
-  bnctx_->ModExp(&B_, g, b_, N);
   bnctx_->ModAdd(&B_, B_, kv, N); 
 
   EncodeToBuffer(B_, serverkey);
@@ -85,7 +91,12 @@ int SrpServerSession::ParseClientPublicKey(OutputCursor* clientkey) {
     return result;
   }
 
-  // TODO: verify A mod N, MUST be != 0
+  // Verify that N is not a divisor of A_, otherwise we are in trouble.
+  const BigNumber& N = primes_.GetPrime(secret_.index());
+  if (bnctx_->IsDivisibleBy(A_, N)) {
+    LOG_DEBUG("A is divisible by N, we're in trouble");
+    return -1;
+  }
   return 0;
 }
 
