@@ -1,4 +1,4 @@
-// Generated automatically from daemon-controller.ipc, on 2012-05-12 14:35:30.710290
+// Generated automatically from daemon-controller.ipc, on 2012-05-13 18:16:36.645483
 // by running "generator.py ipc/daemon-controller.ipc"
 // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***
 
@@ -27,49 +27,58 @@ class DaemonControllerClientIpc : public IpcClientInterface {
 
  private:
   // Forget about the methods here, not for you.
-  void ParseClientConnectReply(OutputCursor* cursor) {
+  int ParseClientConnectReply(OutputCursor* cursor) {
     ProcessClientConnectReply();
+    return 0;
   }
-  void ParseServerShowClientsReply(OutputCursor* cursor) {
+  int ParseServerShowClientsReply(OutputCursor* cursor) {
     vector<string> client;
-    DecodeFromBuffer(cursor, &client);
+    int result;
+    if ((result = DecodeFromBuffer(cursor, &client))) {
+      LOG_DEBUG("unserialization returned %d", result);
+      return result;
+    }
     ProcessServerShowClientsReply(client);
+    return 0;
   }
-  void ParseGetParameterFromUserRequest(OutputCursor* cursor) {
+  int ParseGetParameterFromUserRequest(OutputCursor* cursor) {
     vector<string> name;
-    DecodeFromBuffer(cursor, &name);
+    int result;
+    if ((result = DecodeFromBuffer(cursor, &name))) {
+      LOG_DEBUG("unserialization returned %d", result);
+      return result;
+    }
     ProcessGetParameterFromUserRequest(name);
+    return 0;
   }
 
   // This is the method that will dispatch the incoming requests.
   int Dispatch(OutputCursor* cursor) {
     int16_t num;
-    if (!DecodeFromBuffer(cursor, &num)) {
-      // TODO: error handling
-      return -1;
+    int result = DecodeFromBuffer(cursor, &num);
+    if (result) {
+      LOG_DEBUG("while looking for rpc number, got status %d", result);
+      return result;
     }
 
     switch (num) {
       case -1:
-        ParseClientConnectReply(cursor);;
-        // TODO: error handling
+        result = ParseClientConnectReply(cursor);;
         break;
 
       case -2:
-        ParseServerShowClientsReply(cursor);;
-        // TODO: error handling
+        result = ParseServerShowClientsReply(cursor);;
         break;
 
       case 16384:
-        ParseGetParameterFromUserRequest(cursor);;
-        // TODO: error handling
+        result = ParseGetParameterFromUserRequest(cursor);;
         break;
 
       default:
-        // TODO: error handling
+        LOG_ERROR("unknonw RPC number %d, ignoring", num);
         return -1;
     }
 
-    return 0;
+    return result;
   }
 };

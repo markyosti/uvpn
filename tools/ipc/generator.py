@@ -109,6 +109,7 @@ def main(argv):
       continue
 
     print "+ processing %s" % (fname)
+    interfaces = None
     try:
       interfaces = generator.GetClientInterfaces()
       print "  + generated client interface"
@@ -116,13 +117,15 @@ def main(argv):
       print >>sys.stderr, (
           "ERROR: %s, cannot generate client interface: %s" % (fname, str(e)))
 
-    try:
-      open(client_name, "w").write(banner + interfaces)
-      print "  + file %s written" % (client_name)
-    except IOError as e:
-      print >>sys.stderr, (
-          "ERROR: could not save client interface: %s" % str(e))
+    if interfaces:
+      try:
+        open(client_name, "w").write(banner + interfaces)
+        print "  + file %s written" % (client_name)
+      except IOError as e:
+        print >>sys.stderr, (
+            "ERROR: could not save client interface: %s" % str(e))
 
+    interfaces = None
     try:
       interfaces = generator.GetServerInterfaces()
       print "  + generated server interface"
@@ -130,12 +133,13 @@ def main(argv):
       print >>sys.stderr, (
           "ERROR: %s, cannot generate server interface: %s" % (fname, str(e)))
 
-    try:
-      open(server_name, "w").write(banner + interfaces)
-      print "  + file %s written" % (server_name)
-    except IOError as e:
-      print >>sys.stderr, (
-          "ERROR: could not save server interface: %s" % str(e))
+    if interfaces:
+      try:
+        open(server_name, "w").write(banner + interfaces)
+        print "  + file %s written" % (server_name)
+      except IOError as e:
+        print >>sys.stderr, (
+            "ERROR: could not save server interface: %s" % str(e))
 
 if __name__ == "__main__":
   sys.exit(main(sys.argv))

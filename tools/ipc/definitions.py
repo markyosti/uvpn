@@ -24,43 +24,54 @@ CLIENT_RPC_REQUEST_DISPATCH = (
     "%(send_params)s) = 0;")
 CLIENT_RPC_SEND_REQUEST_START = "  void SendRequest%(name)s(%(send_params)s) {%(serialize_request)s"
 CLIENT_RPC_SEND_REQUEST_END = "    Send();\n  }"
-CLIENT_RPC_REQUEST_PARSE_START = "  void Parse%(name)sRequest(OutputCursor* cursor) {%(unserialize_request)s"
-CLIENT_RPC_REQUEST_PARSE_END = "    Process%(name)sRequest(%(send_unqual)s);\n  }"
-CLIENT_RPC_CALL_REQUEST_DISPATCH = "      Parse%(name)sRequest(cursor);"
+CLIENT_RPC_REQUEST_PARSE_START = """\
+  int Parse%(name)sRequest(OutputCursor* cursor) {%(unserialize_reqdecl)s%(unserialize_request)s"""
+
+CONTROL_CODE = """
+    int result;
+    if (%(condition)s) {
+      LOG_DEBUG("unserialization returned %%d", result);
+      return result;
+    }"""
+
+CLIENT_RPC_REQUEST_PARSE_END = "    Process%(name)sRequest(%(send_unqual)s);\n    return 0;\n  }"
+CLIENT_RPC_CALL_REQUEST_DISPATCH = "Parse%(name)sRequest(cursor);"
 
 CLIENT_RPC_REPLY_DISPATCH = (
     "  virtual void Process%(name)sReply("
     "%(receive_params)s) = 0;")
 CLIENT_RPC_SEND_REPLY_START = "  void SendReplyFor%(name)s(%(receive_params)s) {%(serialize_reply)s"
 CLIENT_RPC_SEND_REPLY_END = "    Send();\n  }"
-CLIENT_RPC_REPLY_PARSE_START = "  void Parse%(name)sReply(OutputCursor* cursor) {%(unserialize_reply)s"
-CLIENT_RPC_REPLY_PARSE_END = "    Process%(name)sReply(%(receive_unqual)s);\n  }"
-CLIENT_RPC_CALL_REPLY_DISPATCH = "      Parse%(name)sReply(cursor);"
+CLIENT_RPC_REPLY_PARSE_START = """\
+  int Parse%(name)sReply(OutputCursor* cursor) {%(unserialize_repdecl)s%(unserialize_reply)s"""
+
+CLIENT_RPC_REPLY_PARSE_END = "    Process%(name)sReply(%(receive_unqual)s);\n    return 0;\n  }"
+CLIENT_RPC_CALL_REPLY_DISPATCH = "Parse%(name)sReply(cursor);"
 
 DISPATCH_START = "\n  // This is the method that will dispatch the incoming requests.\n  int Dispatch(OutputCursor* cursor) {"
 DISPATCH_FUNCTION = \
 """\
       case %(dispatch_num)s:
 %(dispatch_function)s;
-        // TODO: error handling
         break;
 """
 DISPATCH_BODY = \
 """\
     int16_t num;
-    if (!DecodeFromBuffer(cursor, &num)) {
-      // TODO: error handling
-      return -1;
+    int result = DecodeFromBuffer(cursor, &num);
+    if (result) {
+      LOG_DEBUG("while looking for rpc number, got status %%d", result);
+      return result;
     }
 
     switch (num) {
 %(dispatch_functions)s
       default:
-        // TODO: error handling
+        LOG_ERROR("unknonw RPC number %%d, ignoring", num);
         return -1;
     }
 
-    return 0;"""
+    return result;"""
 
 DISPATCH_END = "  }"
 
@@ -105,7 +116,8 @@ class Interface(object):
     functions = []
     for num, method in to_dispatch:
       functions.append(DISPATCH_FUNCTION % {
-          "dispatch_num": num, "dispatch_function": "  " + method})
+          "dispatch_num": num,
+          "dispatch_function": "        result = " + method})
       
     return [
         DISPATCH_START,
@@ -165,15 +177,21 @@ class Rpc(object):
     for send in sends:
       serialize_request.append("    " + "\n    ".join(send.GetSerializationCode()))
     unserialize_request = []
+    unserialize_reqdecl = []
     for send in sends:
-      unserialize_request.append("    " + "\n    ".join(send.GetUnserializationCode()))
+      declaration, unserialization = send.GetUnserializationCode()
+      unserialize_reqdecl.append("    " + declaration)
+      unserialize_request.append("        (result = " + unserialization + ")")
 
     serialize_reply = ["    " + "EncodeToBuffer(static_cast<int16_t>(" + str(-num) + "), SendCursor());"]
     for recv in receives:
-      serialize_reply.append("    " + "\n    ".join(recv.GetSerializationCode()))
+      serialize_reply.append("    " + "    \n".join(recv.GetSerializationCode()))
     unserialize_reply = []
+    unserialize_repdecl = []
     for recv in receives:
-      unserialize_reply.append("    " + "\n    ".join(recv.GetUnserializationCode()))
+      declaration, unserialization = recv.GetUnserializationCode()
+      unserialize_repdecl.append("    " + declaration)
+      unserialize_reply.append("        (result = " + unserialization + ")")
 
     if serialize_reply:
       serialize_reply = "\n" + "\n".join(serialize_reply)
@@ -184,21 +202,34 @@ class Rpc(object):
     else:
       serialize_request = ""
 
+    if unserialize_repdecl:
+      unserialize_repdecl = "\n" + "\n".join(unserialize_repdecl)
+    else:
+      unserialize_repdecl = ""
+    if unserialize_reqdecl:
+      unserialize_reqdecl = "\n" + "\n".join(unserialize_reqdecl)
+    else:
+      unserialize_reqdecl = ""
+
     if unserialize_reply:
-      unserialize_reply = "\n" + "\n".join(unserialize_reply)
+      unserialize_reply = CONTROL_CODE % {
+         "condition": " ||\n".join(unserialize_reply).strip()}
     else:
       unserialize_reply = ""
     if unserialize_request:
-      unserialize_request = "\n" + "\n".join(unserialize_request)
+      unserialize_request = CONTROL_CODE % {
+         "condition": " ||\n".join(unserialize_request).strip()}
     else:
       unserialize_request = ""
 
-    return serialize_reply, serialize_request, unserialize_reply, unserialize_request
+    return (serialize_reply, serialize_request, unserialize_reply,
+            unserialize_request, unserialize_repdecl, unserialize_reqdecl)
 
   def GetExpansionDict(self, num, sends, receives):
     send_args, send_unqual, receive_args, receive_unqual = self.GetArguments()
     (serialize_reply, serialize_request,
-     unserialize_reply, unserialize_request) = self.GetSerializationCode(
+     unserialize_reply, unserialize_request,
+     unserialize_repdecl, unserialize_reqdecl) = self.GetSerializationCode(
         num, sends, receives)
 
     args = {
@@ -207,6 +238,8 @@ class Rpc(object):
       "serialize_reply": serialize_reply,
       "unserialize_reply": unserialize_reply,
       "unserialize_request": unserialize_request,
+      "unserialize_repdecl": unserialize_repdecl,
+      "unserialize_reqdecl": unserialize_reqdecl,
       "send_params": send_args,
       "send_unqual": send_unqual,
       "receive_unqual": receive_unqual,
@@ -238,7 +271,7 @@ class Parameter(object):
 
   def GetUnserializationCode(self):
     return ["%s %s;" % (self.GetSimpleType(), self.name),
-            "DecodeFromBuffer(cursor, &%s);" % (self.name)]
+            "DecodeFromBuffer(cursor, &%s)" % (self.name)]
 
 
 class StringParameter(Parameter):

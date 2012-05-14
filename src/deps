@@ -141,6 +141,18 @@ ip-manager.o: ip-manager.cc \
 	conversions.h \
 	netlink-interfaces.h \
 	stl-helpers.h
+ipc-client.o: ipc-client.cc \
+	ipc-client.h \
+	buffer.h \
+	errors.h \
+	macros.h \
+	backtrace.h \
+	base.h \
+	serializers.h \
+	transport.h \
+	sockaddr.h \
+	hash.h \
+	conversions.h
 netlink-interfaces.o: netlink-interfaces.cc \
 	netlink-interfaces.h \
 	base.h \
@@ -610,8 +622,7 @@ uvpn-ctl.o: uvpn-ctl.cc \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
 	ipc-client.h \
-	serializers.h \
-	ipc/daemon-controller-client.h
+	serializers.h
 uvpn-ip-config.o: uvpn-ip-config.cc \
 	base.h \
 	errors.h \
@@ -730,6 +741,8 @@ deps: \
 	ip-manager.h \
 	netlink-interfaces.h \
 	ip-manager.cc \
+	ipc-client.h \
+	ipc-client.cc \
 	netlink-interfaces.cc \
 	openssl-helpers.cc \
 	openssl-protector.cc \
@@ -790,8 +803,6 @@ deps: \
 	uvpn-ctl.h \
 	yaarg.h \
 	uvpn-ctl-main.cc \
-	ipc-client.h \
-	ipc/daemon-controller-client.h \
 	uvpn-ctl.cc \
 	uvpn-ip-config.cc \
 	uvpn-server.cc \

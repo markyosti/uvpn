@@ -31,11 +31,31 @@
 
 # include "buffer.h"
 # include "serializers.h"
+# include "transport.h"
+
 
 class IpcClientInterface {
+ public:
+  IpcClientInterface(BoundChannel* channel);
+  void Start();
+
  protected:
-  InputCursor* SendCursor();
+  virtual int Dispatch(OutputCursor* cursor) = 0;
+
+  InputCursor* SendCursor() { return write_buffer_.Input(); }
   void Send();
+
+ private:
+  BoundChannel* channel_;
+
+  Buffer read_buffer_;
+  Buffer write_buffer_;
+
+  BoundChannel::processing_state_e HandleRead();
+  BoundChannel::processing_state_e HandleWrite();
+
+  BoundChannel::event_handler_t read_handler_;
+  BoundChannel::event_handler_t write_handler_;
 };
 
 #endif /* IPC_CLIENT_H */

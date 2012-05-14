@@ -27,7 +27,7 @@ uvpn-client: uvpn-client.o scramble-session-protector.o prng.o dispatcher.o open
 
 uvpn-server: uvpn-server.o scramble-session-protector.o prng.o dispatcher.o openssl-helpers.o srp-server-authenticator.o scramble-session-protector.o srp-common.o srp-server.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-server-channel.o packet-queue.o backtrace.o sockaddr.o userdb.o base64.o terminal.o openssl-protector.o password.o aes-session-protector.o ip-addresses.o ip-manager.o netlink-interfaces.o server-tcp-transcoder.o server-simple-connection-manager.o server-udp-transcoder.o daemon-controller-server.o daemon-controller-common.o
 
-uvpn-ctl: daemon-controller-common.o daemon-controller-client.o sockaddr.o uvpn-ctl-main.o socket-transport.o dispatcher.o backtrace.o $(LIBYAARG)
+uvpn-ctl: daemon-controller-common.o daemon-controller-client.o sockaddr.o ipc-client.o uvpn-ctl-main.o socket-transport.o dispatcher.o backtrace.o $(LIBYAARG)
 
 ipc/%-client.h ipc/%-server.h: ipc/%.ipc
 	@$(IPCGENERATOR) $<
