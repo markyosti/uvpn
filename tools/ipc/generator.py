@@ -21,6 +21,7 @@ the requests. The generated code is asynchronous.
 import argparse
 import datetime
 import os
+import re
 import sys
 import definitions
 import textwrap
@@ -50,16 +51,24 @@ class InterfaceGenerator(object):
     if type(self.interfaces) != type([]):
       return "file %s: 'INTERFACES' must be a list." % fname
 
-  def GetClientInterfaces(self):
-    result = []
+  def GetIfdefName(self, fname):
+    replacement = re.sub("[^a-zA-Z0-9]", "_", fname)
+    return replacement.upper()
+
+  def GetClientInterfaces(self, fname):
+    ifdef = self.GetIfdefName(fname)
+    result = ["#ifndef %s" % ifdef, "# define %s" % ifdef]
     for interface in self.interfaces:
       result.append(interface.GetClientInterface())
+    result.append("#endif  /* %s */" % ifdef)
     return "\n".join(result)
 
-  def GetServerInterfaces(self):
-    result = []
+  def GetServerInterfaces(self, fname):
+    ifdef = self.GetIfdefName(fname)
+    result = ["#ifndef %s" % ifdef, "# define %s" % ifdef]
     for interface in self.interfaces:
       result.append(interface.GetServerInterface())
+    result.append("#endif /* %s */" % ifdef)
     return "\n".join(result)
 
 def main(argv):
@@ -111,7 +120,7 @@ def main(argv):
     print "+ processing %s" % (fname)
     interfaces = None
     try:
-      interfaces = generator.GetClientInterfaces()
+      interfaces = generator.GetClientInterfaces(client_name)
       print "  + generated client interface"
     except Exception as e:
       print >>sys.stderr, (
@@ -127,7 +136,7 @@ def main(argv):
 
     interfaces = None
     try:
-      interfaces = generator.GetServerInterfaces()
+      interfaces = generator.GetServerInterfaces(server_name)
       print "  + generated server interface"
     except Exception as e:
       print >>sys.stderr, (

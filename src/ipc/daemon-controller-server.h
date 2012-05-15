@@ -1,7 +1,9 @@
-// Generated automatically from daemon-controller.ipc, on 2012-05-13 18:16:36.645483
+// Generated automatically from daemon-controller.ipc, on 2012-05-15 08:54:13.469507
 // by running "generator.py ipc/daemon-controller.ipc"
 // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***
 
+#ifndef IPC_DAEMON_CONTROLLER_SERVER_H
+# define IPC_DAEMON_CONTROLLER_SERVER_H
 class DaemonControllerServerIpc : public IpcServerInterface {
  public:
   // You have to implement the methods here to process incoming requests.
@@ -82,3 +84,4 @@ class DaemonControllerServerIpc : public IpcServerInterface {
     return result;
   }
 };
+#endif /* IPC_DAEMON_CONTROLLER_SERVER_H */
