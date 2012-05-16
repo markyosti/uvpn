@@ -1,4 +1,4 @@
-// Generated automatically from daemon-controller.ipc, on 2012-05-15 21:06:30.471821
+// Generated automatically from daemon-controller.ipc, on 2012-05-15 21:10:53.885787
 // by running "generator.py ipc/daemon-controller.ipc"
 // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***
 
@@ -9,12 +9,18 @@ class DaemonControllerServerIpc : public IpcServerInterface {
   // You have to implement the methods here to process incoming requests.
   virtual void ProcessClientConnectRequest(const string& server) = 0;
   virtual void ProcessServerShowClientsRequest(void) = 0;
+  virtual void ProcessRequestServerStatusRequest(const vector<string>& server) = 0;
   virtual void ProcessGetParameterFromUserReply(const vector<string>& value) = 0;
 
   // The methods here are the ones you can use to send requests.
   void SendReplyForServerShowClients(const vector<string>& client) {
     EncodeToBuffer(static_cast<int16_t>(-2), SendCursor());
     EncodeToBuffer(client, SendCursor());
+    Send();
+  }
+  void SendReplyForRequestServerStatus(const vector<string>& status) {
+    EncodeToBuffer(static_cast<int16_t>(-3), SendCursor());
+    EncodeToBuffer(status, SendCursor());
     Send();
   }
   void SendRequestGetParameterFromUser(const vector<string>& name) {
@@ -37,6 +43,16 @@ class DaemonControllerServerIpc : public IpcServerInterface {
   }
   int ParseServerShowClientsRequest(OutputCursor* cursor) {
     ProcessServerShowClientsRequest();
+    return 0;
+  }
+  int ParseRequestServerStatusRequest(OutputCursor* cursor) {
+    vector<string> server;
+    int result;
+    if ((result = DecodeFromBuffer(cursor, &server))) {
+      LOG_DEBUG("unserialization returned %d", result);
+      return result;
+    }
+    ProcessRequestServerStatusRequest(server);
     return 0;
   }
   int ParseGetParameterFromUserReply(OutputCursor* cursor) {
@@ -66,6 +82,10 @@ class DaemonControllerServerIpc : public IpcServerInterface {
 
       case 2:
         result = ParseServerShowClientsRequest(cursor);;
+        break;
+
+      case 3:
+        result = ParseRequestServerStatusRequest(cursor);;
         break;
 
       case -16384:

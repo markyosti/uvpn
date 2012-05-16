@@ -10,8 +10,10 @@ INTERFACES = [
       Rpc(name="ServerShowClients",
         sends=[],
         receives=[Repeated(StringParameter("client"))]),
+      Rpc(name="RequestServerStatus",
+        sends=[Repeated(StringParameter("server"))],
+        receives=[Repeated(StringParameter("status"))]),
     ],
-
     receives=[
       Rpc(name="GetParameterFromUser",
         sends=[Repeated(StringParameter("name"))],
