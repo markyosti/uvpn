@@ -553,6 +553,14 @@ userdb.o: userdb.cc \
 	macros.h \
 	backtrace.h \
 	base64.h
+uvpn-client-main.o: uvpn-client-main.cc \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-argv.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	base.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	uvpn-client.h \
+	yaarg.h
 uvpn-client.o: uvpn-client.cc \
 	base.h \
 	dispatcher.h \
@@ -594,6 +602,11 @@ uvpn-client.o: uvpn-client.cc \
 	user-chatter.h \
 	daemon-controller.h \
 	daemon-controller-server.h \
+	uvpn-client.h \
+	yaarg.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
 	client-udp-transcoder.h \
 	client-tcp-transcoder.h
 uvpn-ctl-main.o: uvpn-ctl-main.cc \
@@ -818,13 +831,15 @@ deps: \
 	tun-tap-server-channel.cc \
 	user-chatter.cc \
 	userdb.cc \
-	uvpn-client.cc \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-argv.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
-	uvpn-ctl.h \
+	uvpn-client.h \
 	yaarg.h \
+	uvpn-client-main.cc \
+	uvpn-client.cc \
+	uvpn-ctl.h \
 	uvpn-ctl-main.cc \
 	uvpn-ctl.cc \
 	uvpn-ip-config.cc \

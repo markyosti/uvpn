@@ -12,18 +12,36 @@
 #include "terminal-user-chatter.h"
 #include "daemon-controller.h"
 #include "daemon-controller-server.h"
+#include "uvpn-client.h"
 
 #include "client-udp-transcoder.h"
 #include "client-tcp-transcoder.h"
 
-int main(int argc, char** argv) {
+UvpnClient::UvpnClient(ConfigParser* parser)
+    : type_(
+          parser, Option::Default, "type", "t", "client",
+          "Each yovpn instance runs multiple processes to handle vpn "
+          "connections. Tipically, you will have a 'client' process and "
+          "possibly a 'server' process, but it depends on how you configured "
+          "yovpn to start."),
+      name_(
+          parser, Option::Default, "name", "n", "default",
+          "On a single machine you can have multiple instances of yovpn "
+          "running, each one with its own set of processes, and each one "
+          "with its own name. With this option, you can specify which "
+          "yovpn instance you want to control. "
+          "If you did not change the default name and only run one yovpn, "
+          "you don't need to change this option.") {
+}
+
+void UvpnClient::Run() {
   const string& server("192.168.0.2");
 
   // Dispatcher: listens on fds, dispatches events.
   Dispatcher dispatcher;
   if (!dispatcher.Init()) {
     LOG_FATAL("could not initialize dispatcher");
-    return 1;
+    return;
   }
 
   // Allows to open connections using the socket api.
@@ -36,7 +54,7 @@ int main(int argc, char** argv) {
       &socket_api, "client", "default");
   if (!channel) {
     LOG_FATAL("could not initialize controller");
-    return 2;
+    return;
   }
   DaemonControllerServer controller;
   controller.Listen(channel);
