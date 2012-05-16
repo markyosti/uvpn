@@ -30,6 +30,8 @@
 # define DAEMON_CONTROLLER_CLIENT_H
 
 # include "base.h"
+# include "ipc-client.h"
+# include "ipc/daemon-controller-client.h"
 
 # include <vector>
 
@@ -37,10 +39,14 @@ class Dispatcher;
 class Transport;
 class BoundChannel;
 
-class DaemonControllerClient {
+class DaemonControllerClient : public DaemonControllerClientIpc {
  public:
   DaemonControllerClient(Dispatcher* dispatcher);
-  bool Init(Transport* transport, const char* type, const char* name);
+
+ private:
+  void ProcessGetParameterFromUserRequest(const vector<string>& parameters);
+  void ProcessServerShowClientsReply(const vector<string>& parameters);
+  void ProcessRequestServerStatusReply(const vector<string>& status);
 
  private:
   Dispatcher* dispatcher_;

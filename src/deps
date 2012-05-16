@@ -84,25 +84,40 @@ client-udp-transcoder.o: client-udp-transcoder.cc \
 daemon-controller-client.o: daemon-controller-client.cc \
 	daemon-controller-client.h \
 	base.h \
-	daemon-controller-common.h \
-	transport.h \
+	ipc-client.h \
 	buffer.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
+	serializers.h \
+	transport.h \
 	sockaddr.h \
 	hash.h \
 	conversions.h \
+	ipc/daemon-controller-client.h \
+	daemon-controller.h \
 	dispatcher.h \
 	stl-helpers.h
-daemon-controller-common.o: daemon-controller-common.cc \
-	daemon-controller-common.h \
-	base.h \
-	conversions.h
 daemon-controller-server.o: daemon-controller-server.cc \
-	daemon-controller-server.h \
+	buffer.h \
+	errors.h \
+	macros.h \
+	backtrace.h \
 	base.h \
-	daemon-controller-common.h \
+	serializers.h \
+	daemon-controller-server.h \
+	transport.h \
+	sockaddr.h \
+	hash.h \
+	conversions.h \
+	ipc-server.h \
+	ipc/daemon-controller-server.h \
+	daemon-controller.h \
+	dispatcher.h \
+	stl-helpers.h
+daemon-controller.o: daemon-controller.cc \
+	daemon-controller.h \
+	base.h \
 	transport.h \
 	buffer.h \
 	errors.h \
@@ -110,9 +125,7 @@ daemon-controller-server.o: daemon-controller-server.cc \
 	backtrace.h \
 	sockaddr.h \
 	hash.h \
-	conversions.h \
-	dispatcher.h \
-	stl-helpers.h
+	conversions.h
 dispatcher.o: dispatcher.cc \
 	dispatcher.h \
 	base.h \
@@ -579,6 +592,7 @@ uvpn-client.o: uvpn-client.cc \
 	client-simple-connection-manager.h \
 	terminal-user-chatter.h \
 	user-chatter.h \
+	daemon-controller.h \
 	daemon-controller-server.h \
 	client-udp-transcoder.h \
 	client-tcp-transcoder.h
@@ -601,6 +615,9 @@ uvpn-ctl-main.o: uvpn-ctl-main.cc \
 	hash.h \
 	conversions.h \
 	daemon-controller-client.h \
+	ipc-client.h \
+	serializers.h \
+	ipc/daemon-controller-client.h \
 	yaarg.h
 uvpn-ctl.o: uvpn-ctl.cc \
 	uvpn-ctl.h \
@@ -617,12 +634,14 @@ uvpn-ctl.o: uvpn-ctl.cc \
 	hash.h \
 	conversions.h \
 	daemon-controller-client.h \
+	ipc-client.h \
+	serializers.h \
+	ipc/daemon-controller-client.h \
 	yaarg.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
-	ipc-client.h \
-	serializers.h
+	daemon-controller.h
 uvpn-ip-config.o: uvpn-ip-config.cc \
 	base.h \
 	errors.h \
@@ -677,6 +696,7 @@ uvpn-server.o: uvpn-server.cc \
 	server-udp-transcoder.h \
 	server-tcp-transcoder.h \
 	server-simple-connection-manager.h \
+	daemon-controller.h \
 	daemon-controller-server.h
 uvpn-user.o: uvpn-user.cc \
 	base.h \
@@ -730,18 +750,21 @@ deps: \
 	client-udp-transcoder.h \
 	client-udp-transcoder.cc \
 	daemon-controller-client.h \
-	daemon-controller-common.h \
+	ipc-client.h \
+	ipc/daemon-controller-client.h \
+	daemon-controller.h \
 	daemon-controller-client.cc \
-	daemon-controller-common.cc \
 	daemon-controller-server.h \
+	ipc-server.h \
+	ipc/daemon-controller-server.h \
 	daemon-controller-server.cc \
+	daemon-controller.cc \
 	dispatcher.cc \
 	ip-addresses.h \
 	ip-addresses.cc \
 	ip-manager.h \
 	netlink-interfaces.h \
 	ip-manager.cc \
-	ipc-client.h \
 	ipc-client.cc \
 	netlink-interfaces.cc \
 	openssl-helpers.cc \

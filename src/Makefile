@@ -23,11 +23,11 @@ uvpn-ip-config: uvpn-ip-config.o netlink-interfaces.o ip-addresses.o backtrace.o
 
 uvpn-user: uvpn-user.o userdb.o base64.o srp-common.o srp-passwd.o openssl-helpers.o prng.o terminal.o backtrace.o password.o
 
-uvpn-client: uvpn-client.o scramble-session-protector.o prng.o dispatcher.o openssl-helpers.o srp-client-authenticator.o scramble-session-protector.o srp-common.o srp-client.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-client-channel.o packet-queue.o backtrace.o sockaddr.o openssl-protector.o password.o aes-session-protector.o terminal.o ip-addresses.o netlink-interfaces.o client-tcp-transcoder.o client-udp-transcoder.o user-chatter.o terminal-user-chatter.o client-simple-connection-manager.o daemon-controller-server.o daemon-controller-common.o
+uvpn-client: uvpn-client.o scramble-session-protector.o prng.o dispatcher.o openssl-helpers.o srp-client-authenticator.o scramble-session-protector.o srp-common.o srp-client.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-client-channel.o packet-queue.o backtrace.o sockaddr.o openssl-protector.o password.o aes-session-protector.o terminal.o ip-addresses.o netlink-interfaces.o client-tcp-transcoder.o client-udp-transcoder.o user-chatter.o terminal-user-chatter.o client-simple-connection-manager.o daemon-controller-server.o daemon-controller.o
 
-uvpn-server: uvpn-server.o scramble-session-protector.o prng.o dispatcher.o openssl-helpers.o srp-server-authenticator.o scramble-session-protector.o srp-common.o srp-server.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-server-channel.o packet-queue.o backtrace.o sockaddr.o userdb.o base64.o terminal.o openssl-protector.o password.o aes-session-protector.o ip-addresses.o ip-manager.o netlink-interfaces.o server-tcp-transcoder.o server-simple-connection-manager.o server-udp-transcoder.o daemon-controller-server.o daemon-controller-common.o
+uvpn-server: uvpn-server.o scramble-session-protector.o prng.o dispatcher.o openssl-helpers.o srp-server-authenticator.o scramble-session-protector.o srp-common.o srp-server.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-server-channel.o packet-queue.o backtrace.o sockaddr.o userdb.o base64.o terminal.o openssl-protector.o password.o aes-session-protector.o ip-addresses.o ip-manager.o netlink-interfaces.o server-tcp-transcoder.o server-simple-connection-manager.o server-udp-transcoder.o daemon-controller-server.o daemon-controller.o
 
-uvpn-ctl: daemon-controller-common.o daemon-controller-client.o sockaddr.o ipc-client.o uvpn-ctl-main.o socket-transport.o dispatcher.o backtrace.o $(LIBYAARG)
+uvpn-ctl: daemon-controller.o daemon-controller-client.o sockaddr.o ipc-client.o uvpn-ctl-main.o socket-transport.o dispatcher.o backtrace.o $(LIBYAARG)
 
 ipc/%-client.h ipc/%-server.h: ipc/%.ipc
 	@$(IPCGENERATOR) $<

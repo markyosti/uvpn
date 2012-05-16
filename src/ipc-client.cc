@@ -28,13 +28,14 @@
 
 #include "ipc-client.h"
 
-IpcClientInterface::IpcClientInterface(BoundChannel* channel)
-    : channel_(channel),
+IpcClientInterface::IpcClientInterface()
+    : channel_(NULL),
       read_handler_(bind(&IpcClientInterface::HandleRead, this)),
       write_handler_(bind(&IpcClientInterface::HandleWrite, this)) {
 }
 
-void IpcClientInterface::Start() {
+void IpcClientInterface::Connect(BoundChannel* channel) {
+  channel_ = channel;
   channel_->WantRead(&read_handler_);
 
   // TODO: Really? not sure we should do this at Start.

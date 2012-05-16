@@ -26,24 +26,20 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-#include "buffer.h"
-#include "serializers.h"
-#include "daemon-controller-server.h"
-#include "ipc-server.h"
-#include "ipc/daemon-controller-server.h"
-#include "daemon-controller.h"
+#ifndef IPC_SERVER_H
+# define IPC_SERVER_H
 
-#include "transport.h"
-#include "dispatcher.h"
-#include "sockaddr.h"
+class IpcServerInterface {
+ public:
+  InputCursor* SendCursor() { return write_buffer_.Input(); }
+  void Send();
 
-DaemonControllerServer::DaemonControllerServer() {
-}
+ private:
+  Buffer read_buffer_;
+  Buffer write_buffer_;
 
-void DaemonControllerServer::AddClient(ClientConnectionManager* manager) {
-  clients_.push_back(manager);
-}
+  BoundChannel::event_handler_t read_handler_;
+  BoundChannel::event_handler_t write_handler_;
+};
 
-void DaemonControllerServer::AddServer(ServerConnectionManager* manager) {
-  servers_.push_back(manager);
-}
+#endif /* IPC_SERVER_H */

@@ -27,7 +27,7 @@
 // policies, either expressed or implied, of Mark Moreno.
 
 #include "daemon-controller-client.h"
-#include "daemon-controller-common.h"
+#include "daemon-controller.h"
 
 #include "transport.h"
 #include "dispatcher.h"
@@ -37,13 +37,13 @@ DaemonControllerClient::DaemonControllerClient(Dispatcher* dispatcher)
     : dispatcher_(dispatcher) {
 }
 
-bool DaemonControllerClient::Init(
-    Transport* transport, const char* type, const char* name) {
-  LOG_DEBUG();
-
-  LocalSockaddr socket(DaemonControllerUtils::MakeName(type, name));
-  channel_.reset(transport->DatagramConnect(socket));
-  if (!channel_.get())
-    return false;
-  return true;
+void DaemonControllerClient::ProcessGetParameterFromUserRequest(
+    const vector<string>& parameters) {
 }
+
+void DaemonControllerClient::ProcessServerShowClientsReply(const vector<string>& parameters) {
+}
+
+void DaemonControllerClient::ProcessRequestServerStatusReply(const vector<string>& parameters) {
+}
+

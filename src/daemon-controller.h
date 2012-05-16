@@ -26,19 +26,23 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-#include "daemon-controller-common.h"
-#include "conversions.h"
+#ifndef DOMAIN_CONTROLLER_COMMON_H
+# define DOMAIN_CONTROLLER_COMMON_H
 
-string DaemonControllerUtils::MakeName(
-    const char* type, const char* name) {
-  // TODO: makek this configurable, with a reasonable default.
-  static const char* path = "/var/run/yovpn/yovpn-ctl.";
-  string result(path);
+# include "base.h"
+# include "transport.h"
 
-  result.append(type);
-  result.append(".");
-  result.append(name);
-  result.append(".");
-  result.append(ToString(getpid()));
-  return result;
-}
+# include <string>
+
+class DaemonController {
+ public:
+  static AcceptingChannel* Listen(
+      Transport* transport, const char* type, const char* name);
+  static BoundChannel* Connect(
+      Transport* transport, const char* type, const char* name);
+
+ private:
+  static string MakeName(const char* type, const char* name);
+};
+
+#endif /* DOMAIN_CONTROLLER_COMMON_H */

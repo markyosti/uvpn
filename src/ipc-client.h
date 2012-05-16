@@ -33,11 +33,10 @@
 # include "serializers.h"
 # include "transport.h"
 
-
 class IpcClientInterface {
  public:
-  IpcClientInterface(BoundChannel* channel);
-  void Start();
+  IpcClientInterface();
+  void Connect(BoundChannel* channel);
 
  protected:
   virtual int Dispatch(OutputCursor* cursor) = 0;

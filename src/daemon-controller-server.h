@@ -31,6 +31,8 @@
 
 # include "base.h"
 
+# include "transport.h"
+
 # include <vector>
 
 class Dispatcher;
@@ -41,10 +43,10 @@ class DatagramChannel;
 
 class DaemonControllerServer {
  public:
-  DaemonControllerServer(Dispatcher* dispatcher);
+  DaemonControllerServer();
 
-  bool Init(
-      Transport* transport, const char* type, const char* name);
+  // TODO: this is just a placeholder.
+  void Listen(AcceptingChannel* channel) {}
 
   void AddClient(ClientConnectionManager* manager);
   void AddServer(ServerConnectionManager* manager);

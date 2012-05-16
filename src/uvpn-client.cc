@@ -10,6 +10,7 @@
 #include "srp-client-authenticator.h"
 #include "client-simple-connection-manager.h"
 #include "terminal-user-chatter.h"
+#include "daemon-controller.h"
 #include "daemon-controller-server.h"
 
 #include "client-udp-transcoder.h"
@@ -30,11 +31,15 @@ int main(int argc, char** argv) {
   //SocksTransport socks_api(&dispatcher);
   //ProxyTransport proxy_api(&dispatcher);
   
-  DaemonControllerServer controller(&dispatcher);
-  if (!controller.Init(&socket_api, "client", "default")) {
+  // Initialize controller, so uvpn-ctl works.
+  AcceptingChannel* channel = DaemonController::Listen(
+      &socket_api, "client", "default");
+  if (!channel) {
     LOG_FATAL("could not initialize controller");
     return 2;
   }
+  DaemonControllerServer controller;
+  controller.Listen(channel);
 
   NetworkConfig config;
 

@@ -12,6 +12,7 @@
 #include "server-tcp-transcoder.h"
 #include "server-simple-connection-manager.h"
 #include "interfaces.h"
+#include "daemon-controller.h"
 #include "daemon-controller-server.h"
 
 // So, the client:
@@ -30,11 +31,15 @@ int main(int argc, char** argv) {
   }
   SocketTransport socket_api(&dispatcher);
 
-  DaemonControllerServer controller(&dispatcher);
-  if (!controller.Init(&socket_api, "client", "default")) {
+  // Initialize controller, so uvpn-ctl works.
+  AcceptingChannel* channel = DaemonController::Listen(
+      &socket_api, "server", "default");
+  if (!channel) {
     LOG_FATAL("could not initialize controller");
     return 2;
   }
+  DaemonControllerServer controller;
+  controller.Listen(channel);
 
   UdbSecretFile userdb("/root/uvpn.passwd");
   NetworkConfig netconfig;

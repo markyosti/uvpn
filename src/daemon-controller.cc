@@ -26,15 +26,36 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-#ifndef DOMAIN_CONTROLLER_COMMON_H
-# define DOMAIN_CONTROLLER_COMMON_H
+#include "daemon-controller.h"
+#include "conversions.h"
 
-# include "base.h"
-# include <string>
+BoundChannel* DaemonController::Connect(
+    Transport* transport, const char* type, const char* name) {
+  LOG_DEBUG();
 
-class DaemonControllerUtils {
- public:
-  static string MakeName(const char* type, const char* name);
-};
+  LocalSockaddr socket(MakeName(type, name));
+  return transport->DatagramConnect(socket);
+}
 
-#endif /* DOMAIN_CONTROLLER_COMMON_H */
+AcceptingChannel* DaemonController::Listen(
+    Transport* transport, const char* type, const char* name) {
+  LOG_DEBUG();
+
+  LocalSockaddr socket(MakeName(type, name));
+  return transport->StreamListenOn(socket);
+}
+
+
+string DaemonController::MakeName(
+    const char* type, const char* name) {
+  // TODO: makek this configurable, with a reasonable default.
+  static const char* path = "/var/run/yovpn/yovpn-ctl.";
+  string result(path);
+
+  result.append(type);
+  result.append(".");
+  result.append(name);
+  result.append(".");
+  result.append(ToString(getpid()));
+  return result;
+}

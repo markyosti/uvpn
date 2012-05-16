@@ -46,19 +46,21 @@ class UvpnCtl {
   StringOption type_;
   StringOption name_;
 
-  Command server_;
-  CallbackCommand server_show_clients_;
-  Command server_show_users_;
-  Command server_save_state_;
+  Command cmd_server_;
+  CallbackCommand cmd_server_show_clients_;
+  Command cmd_server_show_users_;
+  Command cmd_server_save_state_;
 
-  Command client_;
-  CallbackCommand client_connect_;
-  Command client_disconnect_;
-  Command client_save_state_;
+  Command cmd_client_;
+  CallbackCommand cmd_client_connect_;
+  Command cmd_client_disconnect_;
+  Command cmd_client_save_state_;
+
+  StringOption opt_server_;
 
   Dispatcher dispatcher_;
   SocketTransport transport_;
-  DaemonControllerClient daemon_;
+  DaemonControllerClient client_;
 };
 
 #endif /* UVPN_CTL_H */
