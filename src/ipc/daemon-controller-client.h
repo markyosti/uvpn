@@ -1,4 +1,4 @@
-// Generated automatically from daemon-controller.ipc, on 2012-05-15 08:54:13.469507
+// Generated automatically from daemon-controller.ipc, on 2012-05-15 21:06:30.471821
 // by running "generator.py ipc/daemon-controller.ipc"
 // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***
 
@@ -7,7 +7,6 @@
 class DaemonControllerClientIpc : public IpcClientInterface {
  public:
   // You have to implement the methods here to process incoming requests.
-  virtual void ProcessClientConnectReply(void) = 0;
   virtual void ProcessServerShowClientsReply(const vector<string>& client) = 0;
   virtual void ProcessGetParameterFromUserRequest(const vector<string>& name) = 0;
 
@@ -29,10 +28,6 @@ class DaemonControllerClientIpc : public IpcClientInterface {
 
  private:
   // Forget about the methods here, not for you.
-  int ParseClientConnectReply(OutputCursor* cursor) {
-    ProcessClientConnectReply();
-    return 0;
-  }
   int ParseServerShowClientsReply(OutputCursor* cursor) {
     vector<string> client;
     int result;
@@ -64,10 +59,6 @@ class DaemonControllerClientIpc : public IpcClientInterface {
     }
 
     switch (num) {
-      case -1:
-        result = ParseClientConnectReply(cursor);;
-        break;
-
       case -2:
         result = ParseServerShowClientsReply(cursor);;
         break;

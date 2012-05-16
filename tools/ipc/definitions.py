@@ -249,15 +249,24 @@ class Rpc(object):
 
   def GetClientSendInterface(self, num):
     args = self.GetExpansionDict(num, self.sends, self.receives)
-    to_implement = [CLIENT_RPC_REPLY_DISPATCH % args]
     public = [CLIENT_RPC_SEND_REQUEST_START % args, CLIENT_RPC_SEND_REQUEST_END % args]
-    private = [CLIENT_RPC_REPLY_PARSE_START % args, CLIENT_RPC_REPLY_PARSE_END % args]
-    return to_implement, public, private, [(-num, CLIENT_RPC_CALL_REPLY_DISPATCH % args)]
+    if self.receives:
+      to_implement = [CLIENT_RPC_REPLY_DISPATCH % args]
+      private = [CLIENT_RPC_REPLY_PARSE_START % args, CLIENT_RPC_REPLY_PARSE_END % args]
+      to_dispatch = [(-num, CLIENT_RPC_CALL_REPLY_DISPATCH % args)]
+    else:
+      to_implement = []
+      private = []
+      to_dispatch = []
+    return to_implement, public, private, to_dispatch
 
   def GetClientReceiveInterface(self, num):
     args = self.GetExpansionDict(num, self.sends, self.receives)
     to_implement = [CLIENT_RPC_REQUEST_DISPATCH % args]
-    public = [CLIENT_RPC_SEND_REPLY_START % args, CLIENT_RPC_SEND_REPLY_END % args]
+    if self.receives:
+      public = [CLIENT_RPC_SEND_REPLY_START % args, CLIENT_RPC_SEND_REPLY_END % args]
+    else:
+      public = []
     private = [CLIENT_RPC_REQUEST_PARSE_START % args, CLIENT_RPC_REQUEST_PARSE_END % args]
     return to_implement, public, private, [(num, CLIENT_RPC_CALL_REQUEST_DISPATCH % args)]
 

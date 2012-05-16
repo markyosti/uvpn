@@ -1,4 +1,4 @@
-// Generated automatically from daemon-controller.ipc, on 2012-05-15 08:54:13.469507
+// Generated automatically from daemon-controller.ipc, on 2012-05-15 21:06:30.471821
 // by running "generator.py ipc/daemon-controller.ipc"
 // *** DO NOT MODIFY MANUALLY, otherwise your changes will be lost.***
 
@@ -12,10 +12,6 @@ class DaemonControllerServerIpc : public IpcServerInterface {
   virtual void ProcessGetParameterFromUserReply(const vector<string>& value) = 0;
 
   // The methods here are the ones you can use to send requests.
-  void SendReplyForClientConnect(void) {
-    EncodeToBuffer(static_cast<int16_t>(-1), SendCursor());
-    Send();
-  }
   void SendReplyForServerShowClients(const vector<string>& client) {
     EncodeToBuffer(static_cast<int16_t>(-2), SendCursor());
     EncodeToBuffer(client, SendCursor());
