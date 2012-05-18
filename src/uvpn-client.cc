@@ -20,18 +20,20 @@
 UvpnClient::UvpnClient(ConfigParser* parser)
     : type_(
           parser, Option::Default, "type", "t", "client",
-          "Each yovpn instance runs multiple processes to handle vpn "
+          "Each uvpn runs multiple processes to provide vpn "
           "connections. Tipically, you will have a 'client' process and "
-          "possibly a 'server' process, but it depends on how you configured "
-          "yovpn to start."),
+          "a 'server' process. By using this option, you can start uvpn "
+          "processes in some custom role. You don't normally need to "
+          "change it, but if you do, remember that you also need to "
+          "pass it to uvpn-ctl."),
       name_(
           parser, Option::Default, "name", "n", "default",
-          "On a single machine you can have multiple instances of yovpn "
-          "running, each one with its own set of processes, and each one "
-          "with its own name. With this option, you can specify which "
-          "yovpn instance you want to control. "
-          "If you did not change the default name and only run one yovpn, "
-          "you don't need to change this option.") {
+          "If you run multiple uvpn 'server's or multiple uvpn 'client's "
+          "(see the --type option), you need each server or each client "
+          "to have a different name. With this option, you can specify "
+          "the name of the uvpn instance to launch. You don't normally need "
+          "to specify this option, but if you do, remember that you also need "
+          "to pass it to uvpn-ctl.") {
 }
 
 void UvpnClient::Run() {
