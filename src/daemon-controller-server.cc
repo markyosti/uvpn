@@ -37,7 +37,35 @@
 #include "dispatcher.h"
 #include "sockaddr.h"
 
-DaemonControllerServer::DaemonControllerServer() {
+DaemonControllerServer::DaemonControllerServer()
+    : client_connect_handler_(bind(&DaemonControllerServer::HandleConnection, this)) {
+}
+
+void DaemonControllerServer::Listen(AcceptingChannel* channel) {
+  channel_.reset(channel);
+  channel->WantConnection(&client_connect_handler_);
+}
+
+AcceptingChannel::processing_state_e
+    DaemonControllerServer::HandleConnection() {
+  BoundChannel* channel(channel_->AcceptConnection(NULL));
+  if (!channel) {
+    LOG_PERROR("error while accepting new connection");
+    return AcceptingChannel::MORE;
+  }
+  LOG_DEBUG("accepted new connection");
+
+  Connection* connection = new Connection(this, channel);
+  // TODO: track connections somewhere.
+  return AcceptingChannel::MORE;
+}
+
+void DaemonControllerServer::ProcessClientConnectRequest(
+    const string& connect, DaemonControllerServer::Connection* connection) {
+}
+
+void DaemonControllerServer::ProcessServerShowClientsRequest(
+    DaemonControllerServer::Connection* connection) {
 }
 
 void DaemonControllerServer::AddClient(ClientConnectionManager* manager) {

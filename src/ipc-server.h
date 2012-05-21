@@ -29,8 +29,17 @@
 #ifndef IPC_SERVER_H
 # define IPC_SERVER_H
 
+# include "buffer.h"
+# include "serializers.h"
+# include "transport.h"
+
 class IpcServerInterface {
  public:
+  void SetChannel(BoundChannel* channel);
+
+ protected:
+  virtual int Dispatch(OutputCursor* cursor) = 0;
+
   InputCursor* SendCursor() { return write_buffer_.Input(); }
   void Send();
 

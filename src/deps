@@ -106,11 +106,11 @@ daemon-controller-server.o: daemon-controller-server.cc \
 	base.h \
 	serializers.h \
 	daemon-controller-server.h \
+	ipc-server.h \
 	transport.h \
 	sockaddr.h \
 	hash.h \
 	conversions.h \
-	ipc-server.h \
 	ipc/daemon-controller-server.h \
 	daemon-controller.h \
 	dispatcher.h \
@@ -602,6 +602,9 @@ uvpn-client.o: uvpn-client.cc \
 	user-chatter.h \
 	daemon-controller.h \
 	daemon-controller-server.h \
+	ipc-server.h \
+	serializers.h \
+	ipc/daemon-controller-server.h \
 	uvpn-client.h \
 	yaarg.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
@@ -710,7 +713,10 @@ uvpn-server.o: uvpn-server.cc \
 	server-tcp-transcoder.h \
 	server-simple-connection-manager.h \
 	daemon-controller.h \
-	daemon-controller-server.h
+	daemon-controller-server.h \
+	ipc-server.h \
+	serializers.h \
+	ipc/daemon-controller-server.h
 uvpn-user.o: uvpn-user.cc \
 	base.h \
 	userdb.h \

@@ -31,6 +31,8 @@
 
 # include "base.h"
 
+# include "ipc-server.h"
+# include "ipc/daemon-controller-server.h"
 # include "transport.h"
 
 # include <vector>
@@ -45,15 +47,42 @@ class DaemonControllerServer {
  public:
   DaemonControllerServer();
 
-  // TODO: this is just a placeholder.
-  void Listen(AcceptingChannel* channel) {}
+  void Listen(AcceptingChannel* channel);
 
   void AddClient(ClientConnectionManager* manager);
   void AddServer(ServerConnectionManager* manager);
 
  private:
+  class Connection : public DaemonControllerServerIpc {
+   public:
+    Connection(DaemonControllerServer* server, BoundChannel* channel)
+        : server_(server), channel_(channel) {}
+
+    void ProcessClientConnectRequest(const string& connect) {
+      server_->ProcessClientConnectRequest(connect, this);
+    }
+  
+    void ProcessServerShowClientsRequest() {
+      server_->ProcessServerShowClientsRequest(this);
+    }
+
+    void ProcessRequestServerStatusRequest(const vector<string>& reply) {}
+    void ProcessGetParameterFromUserReply(const vector<string>& reply) {}
+
+   private:
+    DaemonControllerServer* server_;
+    auto_ptr<BoundChannel> channel_;
+  };
+
+  void ProcessClientConnectRequest(const string& connect, Connection* connection);
+  void ProcessServerShowClientsRequest(Connection* connection);
+
+  AcceptingChannel::processing_state_e HandleConnection();
+
   Dispatcher* dispatcher_;
-  auto_ptr<DatagramChannel> channel_; 
+  auto_ptr<AcceptingChannel> channel_; 
+
+  AcceptingChannel::event_handler_t client_connect_handler_;
 
   vector<ClientConnectionManager*> clients_;
   vector<ServerConnectionManager*> servers_;

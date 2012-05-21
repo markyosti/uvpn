@@ -104,7 +104,7 @@ bool UvpnCtl::Init() {
   if (!channel)
     return false;
 
-  client_.Connect(channel);
+  client_.SetChannel(channel);
 
   dispatcher_.Start();
   return true;

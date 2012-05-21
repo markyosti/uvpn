@@ -36,7 +36,7 @@
 class IpcClientInterface {
  public:
   IpcClientInterface();
-  void Connect(BoundChannel* channel);
+  void SetChannel(BoundChannel* channel);
 
  protected:
   virtual int Dispatch(OutputCursor* cursor) = 0;

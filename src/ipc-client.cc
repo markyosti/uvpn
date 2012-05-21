@@ -34,7 +34,7 @@ IpcClientInterface::IpcClientInterface()
       write_handler_(bind(&IpcClientInterface::HandleWrite, this)) {
 }
 
-void IpcClientInterface::Connect(BoundChannel* channel) {
+void IpcClientInterface::SetChannel(BoundChannel* channel) {
   channel_ = channel;
   channel_->WantRead(&read_handler_);
 
