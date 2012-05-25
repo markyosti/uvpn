@@ -670,8 +670,21 @@ uvpn-ip-config.o: uvpn-ip-config.cc \
 	hash.h \
 	ip-addresses.h \
 	stl-helpers.h
+uvpn-server-main.o: uvpn-server-main.cc \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-argv.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	base.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	uvpn-server.h \
+	yaarg.h
 uvpn-server.o: uvpn-server.cc \
 	base.h \
+	uvpn-server.h \
+	yaarg.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
+	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
 	dispatcher.h \
 	errors.h \
 	macros.h \
@@ -849,6 +862,8 @@ deps: \
 	uvpn-ctl-main.cc \
 	uvpn-ctl.cc \
 	uvpn-ip-config.cc \
+	uvpn-server.h \
+	uvpn-server-main.cc \
 	uvpn-server.cc \
 	uvpn-user.cc \
 	Makefile
