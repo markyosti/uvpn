@@ -98,6 +98,6 @@ void UvpnClient::Run() {
   TerminalUserChatter chatter;
 
   // Connect, and perform authentication.
-  manager.Connect(server, &chatter);
+  manager.AddConnection(server, &chatter);
   dispatcher.Start();
 }

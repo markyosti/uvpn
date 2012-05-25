@@ -37,7 +37,7 @@ ClientConnectedSession* ClientSimpleConnectionManager::CreateSession(
   return NULL;
 }
 
-void ClientSimpleConnectionManager::Connect(
+void ClientSimpleConnectionManager::AddConnection(
     const string& destination, UserChatter* chatter) {
   // Pseudo code:
   //   - pick which transcoders we want to use.

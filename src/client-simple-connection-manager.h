@@ -42,7 +42,7 @@ class ClientSimpleConnectionManager : public ClientConnectionManager {
   void RegisterAuthenticator(ClientAuthenticator* authenticator);
   void RegisterTranscoder(ClientTranscoder* transcoder);
 
-  void Connect(const string& destination, UserChatter* chatter);
+  void AddConnection(const string& destination, UserChatter* chatter);
 
  private:
   class Session : public ClientConnectedSession {

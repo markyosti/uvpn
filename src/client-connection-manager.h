@@ -135,7 +135,7 @@ class ClientConnectionManager {
 
   virtual void RegisterTranscoder(ClientTranscoder* transcoder) = 0;
 
-  virtual void Connect(const string& destination, UserChatter* chatter) = 0;
+  virtual void AddConnection(const string& destination, UserChatter* chatter) = 0;
 };
 
 
