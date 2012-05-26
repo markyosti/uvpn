@@ -1,5 +1,5 @@
 #include "ip-manager.h"
-#include "netlink-interfaces.h"
+#include "interfaces.h"
 #include "stl-helpers.h"
 
 bool IPManager::IsRangeOverlapping(const IPRange& range, const list<RoutingEntry*>& entries) {

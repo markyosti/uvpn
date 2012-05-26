@@ -1,17 +1,17 @@
-#ifndef DISPATCHER_H
-# define DISPATCHER_H
+#ifndef LINUX_EPOLL_DISPATCHER_H
+# define LINUX_EPOLL_DISPATCHER_H
+
+# include "../base.h"
+# include "../errors.h"
+# include "../macros.h"
+# include "../stl-helpers.h"
 
 # include <sys/epoll.h>
-# include "base.h"
-# include "errors.h"
-# include "macros.h"
-# include "stl-helpers.h"
-
 # include <list>
 
-class Dispatcher;
+class EpollDispatcher;
 
-class Dispatcher {
+class EpollDispatcher {
  public:
   static const int kQueueLength = 10;
 
@@ -25,8 +25,8 @@ class Dispatcher {
 
   typedef function<void ()> event_handler_t;
 
-  Dispatcher();
-  ~Dispatcher();
+  EpollDispatcher();
+  ~EpollDispatcher();
 
   bool Start();
   void Stop();
@@ -77,9 +77,9 @@ class Dispatcher {
 };
 
 template<typename TYPE>
-void Dispatcher::DeleteLater(TYPE* todelete) {
+void EpollDispatcher::DeleteLater(TYPE* todelete) {
   LOG_DEBUG("scheduling deletion of %08x", (unsigned int)todelete);
   pending_deletions_.push_back(new TypedHolder<TYPE>(todelete));
 }
 
-#endif /* DISPATCHER_H */
+#endif /* LINUX_EPOLL_DISPATCHER_H */

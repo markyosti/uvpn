@@ -1,8 +1,8 @@
 #include "netlink-interfaces.h"
 
-#include "errors.h"
-#include "buffer.h"
-#include "stl-helpers.h"
+#include "../errors.h"
+#include "../buffer.h"
+#include "../stl-helpers.h"
 
 #include <errno.h>
 #include <string.h>

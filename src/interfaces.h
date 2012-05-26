@@ -1,7 +1,9 @@
 #ifndef INTERFACES_H
 # define INTERFACES_H
 
-# include "netlink-interfaces.h"
-typedef NetlinkNetworking NetworkConfig;
+# if UVPN_SYSTEM == LINUX
+#  include "linux/netlink-interfaces.h"
+CLASS_ALIAS(NetworkConfig, NetlinkNetworking);
+# endif
 
 #endif /* INTERFACES_H */

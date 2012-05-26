@@ -1,9 +1,9 @@
-#ifndef UNIX_INTERFACES_H
-# define UNIX_INTERFACES_H
+#ifndef LINUX_NETLINK_INTERFACES_H
+# define LINUX_NETLINK_INTERFACES_H
 
-# include "base.h"
-# include "sockaddr.h"
-# include "ip-addresses.h"
+# include "../base.h"
+# include "../sockaddr.h"
+# include "../ip-addresses.h"
 
 # include <vector>
 # include <list>
@@ -106,4 +106,4 @@ class NetlinkNetworking {
   RoutingTable table_;
 };
 
-#endif /* UNIX_INTERFACES_H */
+#endif /* LINUX_NETLINK_INTERFACES_H */

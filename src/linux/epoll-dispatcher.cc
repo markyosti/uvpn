@@ -1,20 +1,20 @@
-#include "dispatcher.h"
-#include "stl-helpers.h"
+#include "epoll-dispatcher.h"
+#include "../stl-helpers.h"
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <memory>
 
-Dispatcher::Dispatcher() 
+EpollDispatcher::EpollDispatcher() 
     : poll_fd_(-1) {
 }
 
-Dispatcher::~Dispatcher() {
+EpollDispatcher::~EpollDispatcher() {
   if (poll_fd_ >= 0)
     close(poll_fd_);
 }
 
-bool Dispatcher::Init() {
+bool EpollDispatcher::Init() {
   poll_fd_ = epoll_create(kQueueLength);
   if (poll_fd_ < 0)
     // FIXME: error!
@@ -22,7 +22,7 @@ bool Dispatcher::Init() {
   return true;
 }
 
-bool Dispatcher::SetFd(
+bool EpollDispatcher::SetFd(
     int fd, event_mask_t set, event_mask_t clear,
     const event_handler_t* readh, const event_handler_t* writeh) {
   RUNTIME_FATAL_UNLESS(poll_fd_ >= 0)("must first call Init()");
@@ -33,7 +33,7 @@ bool Dispatcher::SetFd(
   return ModFd(fd, set, clear, data, readh, writeh);
 }
 
-bool Dispatcher::AddFd(
+bool EpollDispatcher::AddFd(
     int fd, event_mask_t events,
     const event_handler_t* readh, const event_handler_t* writeh) {
   RUNTIME_FATAL_UNLESS(poll_fd_ >= 0)("must first call Init()");
@@ -58,7 +58,7 @@ bool Dispatcher::AddFd(
   return true;
 }
 
-bool Dispatcher::DelFd(int fd) {
+bool EpollDispatcher::DelFd(int fd) {
   RUNTIME_FATAL_UNLESS(poll_fd_ >= 0)("must first call Init()");
   LOG_DEBUG("marking fd %d for deletion", fd);
 
@@ -83,14 +83,14 @@ bool Dispatcher::DelFd(int fd) {
   return true;
 }
 
-bool Dispatcher::GetFd(
+bool EpollDispatcher::GetFd(
     int fd, int* events,
     const event_handler_t** readh, const event_handler_t** writeh) {
   LOG_FATAL("NOT IMPLEMENTED");
   return false;
 }
 
-bool Dispatcher::ModFd(
+bool EpollDispatcher::ModFd(
     int fd, event_mask_t set, event_mask_t clear, EpollEvent* data,
     const event_handler_t* readh, const event_handler_t* writeh) {
   RUNTIME_FATAL_UNLESS(poll_fd_ >= 0)("must first call Init()");
@@ -127,7 +127,7 @@ bool Dispatcher::ModFd(
   return true;
 }
 
-bool Dispatcher::Start() {
+bool EpollDispatcher::Start() {
   RUNTIME_FATAL_UNLESS(poll_fd_ >= 0)("must first call Init()");
 
   epoll_event events[kQueueLength];

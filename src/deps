@@ -37,6 +37,7 @@ client-simple-connection-manager.o: client-simple-connection-manager.cc \
 	openssl-protector.h \
 	client-io-channel.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	sockaddr.h \
 	conversions.h
 client-tcp-transcoder.o: client-tcp-transcoder.cc \
@@ -97,6 +98,7 @@ daemon-controller-client.o: daemon-controller-client.cc \
 	ipc/daemon-controller-client.h \
 	daemon-controller.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	stl-helpers.h
 daemon-controller-server.o: daemon-controller-server.cc \
 	buffer.h \
@@ -114,6 +116,7 @@ daemon-controller-server.o: daemon-controller-server.cc \
 	ipc/daemon-controller-server.h \
 	daemon-controller.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	stl-helpers.h
 daemon-controller.o: daemon-controller.cc \
 	daemon-controller.h \
@@ -126,13 +129,6 @@ daemon-controller.o: daemon-controller.cc \
 	sockaddr.h \
 	hash.h \
 	conversions.h
-dispatcher.o: dispatcher.cc \
-	dispatcher.h \
-	base.h \
-	errors.h \
-	macros.h \
-	backtrace.h \
-	stl-helpers.h
 ip-addresses.o: ip-addresses.cc \
 	ip-addresses.h \
 	sockaddr.h \
@@ -152,7 +148,8 @@ ip-manager.o: ip-manager.cc \
 	macros.h \
 	backtrace.h \
 	conversions.h \
-	netlink-interfaces.h \
+	interfaces.h \
+	linux/netlink-interfaces.h \
 	stl-helpers.h
 ipc-client.o: ipc-client.cc \
 	ipc-client.h \
@@ -166,18 +163,6 @@ ipc-client.o: ipc-client.cc \
 	sockaddr.h \
 	hash.h \
 	conversions.h
-netlink-interfaces.o: netlink-interfaces.cc \
-	netlink-interfaces.h \
-	base.h \
-	sockaddr.h \
-	hash.h \
-	errors.h \
-	macros.h \
-	backtrace.h \
-	conversions.h \
-	ip-addresses.h \
-	buffer.h \
-	stl-helpers.h
 openssl-helpers.o: openssl-helpers.cc \
 	openssl-helpers.h \
 	base.h \
@@ -259,6 +244,7 @@ server-simple-connection-manager.o: server-simple-connection-manager.cc \
 	hash.h \
 	server-authenticator.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	stl-helpers.h \
 	scramble-session-protector.h \
 	openssl-protector.h \
@@ -347,6 +333,7 @@ socket-transport.o: socket-transport.cc \
 	hash.h \
 	conversions.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	stl-helpers.h \
 	fd-helpers.h
 srp-client-authenticator.o: srp-client-authenticator.cc \
@@ -491,6 +478,7 @@ tun-tap-client-channel.o: tun-tap-client-channel.cc \
 	connection-key.h \
 	hash.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	stl-helpers.h \
 	tun-tap-common.h \
 	packet-queue.h \
@@ -498,7 +486,7 @@ tun-tap-client-channel.o: tun-tap-client-channel.cc \
 	sockaddr.h \
 	conversions.h \
 	interfaces.h \
-	netlink-interfaces.h \
+	linux/netlink-interfaces.h \
 	ip-addresses.h \
 	serializers.h
 tun-tap-common.o: tun-tap-common.cc \
@@ -531,11 +519,12 @@ tun-tap-server-channel.o: tun-tap-server-channel.cc \
 	conversions.h \
 	tun-tap-common.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	stl-helpers.h \
 	packet-queue.h \
 	transport.h \
 	interfaces.h \
-	netlink-interfaces.h \
+	linux/netlink-interfaces.h \
 	tun-tap-client-channel.h \
 	client-io-channel.h \
 	client-connection-manager.h \
@@ -564,12 +553,13 @@ uvpn-client-main.o: uvpn-client-main.cc \
 uvpn-client.o: uvpn-client.cc \
 	base.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
 	stl-helpers.h \
 	interfaces.h \
-	netlink-interfaces.h \
+	linux/netlink-interfaces.h \
 	sockaddr.h \
 	hash.h \
 	conversions.h \
@@ -620,6 +610,7 @@ uvpn-ctl-main.o: uvpn-ctl-main.cc \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser-options.h \
 	uvpn-ctl.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
@@ -638,6 +629,7 @@ uvpn-ctl-main.o: uvpn-ctl-main.cc \
 uvpn-ctl.o: uvpn-ctl.cc \
 	uvpn-ctl.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	base.h \
 	errors.h \
 	macros.h \
@@ -665,7 +657,7 @@ uvpn-ip-config.o: uvpn-ip-config.cc \
 	backtrace.h \
 	conversions.h \
 	interfaces.h \
-	netlink-interfaces.h \
+	linux/netlink-interfaces.h \
 	sockaddr.h \
 	hash.h \
 	ip-addresses.h \
@@ -686,6 +678,7 @@ uvpn-server.o: uvpn-server.cc \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/config-parser.h \
 	/opt/projects/nstx-improved/uvpn/lib/yaarg/utils.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
@@ -710,7 +703,7 @@ uvpn-server.o: uvpn-server.cc \
 	packet-queue.h \
 	transport.h \
 	interfaces.h \
-	netlink-interfaces.h \
+	linux/netlink-interfaces.h \
 	socket-transport.h \
 	srp-server-authenticator.h \
 	authenticator-id.h \
@@ -772,6 +765,7 @@ deps: \
 	scramble-session-protector.h \
 	client-io-channel.h \
 	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	sockaddr.h \
 	client-simple-connection-manager.cc \
 	client-tcp-transcoder.h \
@@ -791,14 +785,13 @@ deps: \
 	ipc/daemon-controller-server.h \
 	daemon-controller-server.cc \
 	daemon-controller.cc \
-	dispatcher.cc \
 	ip-addresses.h \
 	ip-addresses.cc \
 	ip-manager.h \
-	netlink-interfaces.h \
+	interfaces.h \
+	linux/netlink-interfaces.h \
 	ip-manager.cc \
 	ipc-client.cc \
-	netlink-interfaces.cc \
 	openssl-helpers.cc \
 	openssl-protector.cc \
 	packet-queue.cc \
@@ -843,7 +836,6 @@ deps: \
 	tun-tap-client-channel.h \
 	io-channel-id.h \
 	tun-tap-common.h \
-	interfaces.h \
 	tun-tap-client-channel.cc \
 	tun-tap-common.cc \
 	tun-tap-server-channel.h \
