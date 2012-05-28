@@ -60,18 +60,13 @@ test-ip-manager.o: test-ip-manager.cc \
 	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
 	/opt/projects/nstx-improved/uvpn/src/conversions.h \
 	/opt/projects/nstx-improved/uvpn/src/interfaces.h \
-	/opt/projects/nstx-improved/uvpn/src/netlink-interfaces.h
+	/opt/projects/nstx-improved/uvpn/src/linux/netlink-interfaces.h
 test-netlink-interfaces.o: test-netlink-interfaces.cc \
 	gtest.h \
-	/opt/projects/nstx-improved/uvpn/src/netlink-interfaces.h \
 	/opt/projects/nstx-improved/uvpn/src/base.h \
-	/opt/projects/nstx-improved/uvpn/src/sockaddr.h \
-	/opt/projects/nstx-improved/uvpn/src/hash.h \
 	/opt/projects/nstx-improved/uvpn/src/errors.h \
 	/opt/projects/nstx-improved/uvpn/src/macros.h \
-	/opt/projects/nstx-improved/uvpn/src/backtrace.h \
-	/opt/projects/nstx-improved/uvpn/src/conversions.h \
-	/opt/projects/nstx-improved/uvpn/src/ip-addresses.h
+	/opt/projects/nstx-improved/uvpn/src/backtrace.h
 test-openssl-helpers.o: test-openssl-helpers.cc \
 	gtest.h \
 	/opt/projects/nstx-improved/uvpn/src/openssl-helpers.h \
@@ -143,17 +138,12 @@ test-srp-common.o: test-srp-common.cc \
 	/opt/projects/nstx-improved/uvpn/src/prng.h \
 	/opt/projects/nstx-improved/uvpn/src/charset.h \
 	/opt/projects/nstx-improved/uvpn/src/userdb.h \
-	/opt/projects/nstx-improved/uvpn/src/logging.h \
 	/opt/projects/nstx-improved/uvpn/src/srp-server.h
 test-userdb.o: test-userdb.cc \
 	gtest.h \
 	/opt/projects/nstx-improved/uvpn/src/userdb.h \
 	/opt/projects/nstx-improved/uvpn/src/base.h \
-	/opt/projects/nstx-improved/uvpn/src/password.h \
-	/opt/projects/nstx-improved/uvpn/src/logging.h \
-	/opt/projects/nstx-improved/uvpn/src/errors.h \
-	/opt/projects/nstx-improved/uvpn/src/macros.h \
-	/opt/projects/nstx-improved/uvpn/src/backtrace.h
+	/opt/projects/nstx-improved/uvpn/src/password.h
 dependencies: \
 	gtest.h \
 	gtest-main.cc \
@@ -183,7 +173,7 @@ dependencies: \
 	test-ip-addresses.cc \
 	/opt/projects/nstx-improved/uvpn/src/ip-manager.h \
 	/opt/projects/nstx-improved/uvpn/src/interfaces.h \
-	/opt/projects/nstx-improved/uvpn/src/netlink-interfaces.h \
+	/opt/projects/nstx-improved/uvpn/src/linux/netlink-interfaces.h \
 	test-ip-manager.cc \
 	test-netlink-interfaces.cc \
 	/opt/projects/nstx-improved/uvpn/src/openssl-helpers.h \
@@ -199,7 +189,6 @@ dependencies: \
 	/opt/projects/nstx-improved/uvpn/src/srp-client.h \
 	/opt/projects/nstx-improved/uvpn/src/srp-passwd.h \
 	/opt/projects/nstx-improved/uvpn/src/userdb.h \
-	/opt/projects/nstx-improved/uvpn/src/logging.h \
 	/opt/projects/nstx-improved/uvpn/src/srp-server.h \
 	test-srp-common.cc \
 	test-userdb.cc \

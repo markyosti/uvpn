@@ -2,7 +2,7 @@
 #include <unordered_set>
 #include <iostream>
 
-#include "src/netlink-interfaces.h"
+#include "src/interfaces.h"
 #include "src/base.h"
 #include "src/errors.h"
 

@@ -33,9 +33,9 @@ test-openssl-helpers: $(GTEST) $(COMMON) test-openssl-helpers.o $(SRC)/openssl-h
 test-base64: $(GTEST) $(COMMON) test-base64.o $(SRC)/base64.o $(SRC)/base64.o
 test-userdb: $(GTEST) $(COMMON) test-userdb.o $(SRC)/userdb.o $(SRC)/userdb.o $(SRC)/base64.o
 test-srp-common: $(GTEST) $(COMMON) test-srp-common.o $(SRC)/srp-common.o $(SRC)/openssl-helpers.o $(SRC)/srp-client.o $(SRC)/srp-server.o $(SRC)/srp-passwd.o $(SRC)/prng.o $(SRC)/base64.o $(SRC)/srp-server.o $(SRC)/srp-client.o
-test-netlink-interfaces: $(GTEST) $(COMMON) test-netlink-interfaces.o $(SRC)/netlink-interfaces.o $(SRC)/netlink-interfaces.o $(SRC)/ip-addresses.o
+test-netlink-interfaces: $(GTEST) $(COMMON) test-netlink-interfaces.o $(SRC)/linux/netlink-interfaces.o $(SRC)/linux/netlink-interfaces.o $(SRC)/ip-addresses.o
 test-ip-addresses: $(GTEST) $(COMMON) test-ip-addresses.o $(SRC)/ip-addresses.o
-test-ip-manager: $(GTEST) $(COMMON) test-ip-manager.o $(SRC)/ip-addresses.o $(SRC)/ip-manager.o $(SRC)/netlink-interfaces.o
+test-ip-manager: $(GTEST) $(COMMON) test-ip-manager.o $(SRC)/ip-addresses.o $(SRC)/ip-manager.o $(SRC)/linux/netlink-interfaces.o
 test-connection-key: $(GTEST) $(COMMON) test-connection-key.o
 
 $(SRC)/%.o:
