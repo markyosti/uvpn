@@ -3,6 +3,7 @@
 
 # include "base.h"
 # include "buffer.h"
+# include "dispatcher.h"
 # include "prng.h"
 # include "password.h"
 # include "client-transcoder.h"
@@ -15,7 +16,6 @@
 # include <vector>
 
 class UserChatter;
-class Dispatcher;
 class Prng;
 
 class ClientSimpleConnectionManager : public ClientConnectionManager {

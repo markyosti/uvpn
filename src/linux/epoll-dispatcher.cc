@@ -1,5 +1,7 @@
 #include "epoll-dispatcher.h"
 #include "../stl-helpers.h"
+#include "../event-scheduler.h"
+
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -127,7 +129,7 @@ bool EpollDispatcher::ModFd(
   return true;
 }
 
-bool EpollDispatcher::Start() {
+bool EpollDispatcher::Start(EventScheduler* scheduler) {
   RUNTIME_FATAL_UNLESS(poll_fd_ >= 0)("must first call Init()");
 
   epoll_event events[kQueueLength];
@@ -141,13 +143,20 @@ bool EpollDispatcher::Start() {
     }
     pending_deletions_.clear();
 
-    // FIXME: add support for handling signals and timeouts.
-    int found = epoll_wait(poll_fd_, events, kQueueLength, -1);
+    int timeout = -1;
+    if (scheduler)
+      timeout = scheduler->GetTimeUntilNextEvent();
+
+    // FIXME: add support for handling signals.
+    int found = epoll_wait(poll_fd_, events, kQueueLength, timeout);
     if (found < 0) {
       LOG_DEBUG("epoll error: %d - %s", errno, strerror(errno));
       // FIXME: handle errors.
       continue;
     }
+
+    if (scheduler)
+      scheduler->ProcessPendingEvents();
 
     LOG_DEBUG("epoll events %d", found);
 

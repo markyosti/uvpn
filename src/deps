@@ -129,6 +129,14 @@ daemon-controller.o: daemon-controller.cc \
 	sockaddr.h \
 	hash.h \
 	conversions.h
+event-scheduler.o: event-scheduler.cc \
+	event-scheduler.h \
+	base.h \
+	timers.h \
+	linux/clock-timers.h \
+	errors.h \
+	macros.h \
+	backtrace.h
 ip-addresses.o: ip-addresses.cc \
 	ip-addresses.h \
 	sockaddr.h \
@@ -785,6 +793,10 @@ deps: \
 	ipc/daemon-controller-server.h \
 	daemon-controller-server.cc \
 	daemon-controller.cc \
+	event-scheduler.h \
+	timers.h \
+	linux/clock-timers.h \
+	event-scheduler.cc \
 	ip-addresses.h \
 	ip-addresses.cc \
 	ip-manager.h \

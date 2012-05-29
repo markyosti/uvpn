@@ -4,11 +4,11 @@
 // Basic abstraction to keep a queue of packets / buffers.
 # include <queue>
 # include "buffer.h"
+# include "dispatcher.h"
 # include "transport.h"
 
 class Sockaddr;
 class SessionProtector;
-class Dispatcher;
 
 class DatagramSenderPacketQueue {
  public:

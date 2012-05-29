@@ -3,8 +3,8 @@
 
 # include <string>
 # include "base.h"
+# include "dispatcher.h"
 
-class Dispatcher;
 class InputCursor;
 class OutputCursor;
 

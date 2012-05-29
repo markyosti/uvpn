@@ -31,13 +31,13 @@
 
 # include "base.h"
 
+# include "dispatcher.h"
 # include "ipc-server.h"
 # include "ipc/daemon-controller-server.h"
 # include "transport.h"
 
 # include <vector>
 
-class Dispatcher;
 class Transport;
 class ClientConnectionManager;
 class ServerConnectionManager; 

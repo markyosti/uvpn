@@ -25,7 +25,7 @@ using namespace std::tr1;
 # endif
 # define FUNCTOR_EQ(code) namespace std { code }
 
-# define CLASS_ALIAS(name, original) class name : public original {}
+# define CLASS_ALIAS(name, original) typedef original name
 
 
 #endif /* BASE_H */

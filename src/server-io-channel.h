@@ -1,10 +1,9 @@
 #ifndef SERVER_IO_CHANNEL_H
 # define SERVER_IO_CHANNEL_H
 
+# include "dispatcher.h"
 # include "protector.h"
 # include "server-connection-manager.h"
-
-class Dispatcher;
 
 class ServerIOChannel {
  public:

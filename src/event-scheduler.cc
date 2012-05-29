@@ -26,31 +26,4 @@
 // those of the authors and should not be interpreted as representing official
 // policies, either expressed or implied, of Mark Moreno.
 
-#ifndef DAEMON_CONTROLLER_CLIENT_H
-# define DAEMON_CONTROLLER_CLIENT_H
-
-# include "base.h"
-# include "dispatcher.h"
-# include "ipc-client.h"
-# include "ipc/daemon-controller-client.h"
-
-# include <vector>
-
-class Transport;
-class BoundChannel;
-
-class DaemonControllerClient : public DaemonControllerClientIpc {
- public:
-  DaemonControllerClient(Dispatcher* dispatcher);
-
- private:
-  void ProcessGetParameterFromUserRequest(const vector<string>& parameters);
-  void ProcessServerShowClientsReply(const vector<string>& parameters);
-  void ProcessRequestServerStatusReply(const vector<string>& status);
-
- private:
-  Dispatcher* dispatcher_;
-  auto_ptr<BoundChannel> channel_; 
-};
-
-#endif /* DAEMON_CONTROLLER_CLIENT_H */
+#include "event-scheduler.h"

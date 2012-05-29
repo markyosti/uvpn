@@ -2,9 +2,8 @@
 # define CLIENT_IO_CHANNEL_H
 
 # include "protector.h"
+# include "dispatcher.h"
 # include "client-connection-manager.h"
-
-class Dispatcher;
 
 // Notes: this has to handle both the client side and the server side.
 // For a tun/tap device, it's fairly obvious how it will work. It's not

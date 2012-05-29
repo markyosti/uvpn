@@ -2,11 +2,11 @@
 # define SIMPLE_UDP_TRANSCODER_H
 
 # include "client-transcoder.h"
+# include "dispatcher.h"
 # include "packet-queue.h"
 # include "transport.h"
 # include "client-connection-manager.h"
 
-class Dispatcher;
 class SessionProtector;
 class BoundChannel;
 class Sockaddr;

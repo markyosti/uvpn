@@ -1,6 +1,7 @@
 #ifndef SERVER_UDP_TRANSCODER_H
 # define SERVER_UDP_TRANSCODER_H
 
+# include "dispatcher.h"
 # include "server-transcoder.h"
 # include "transport.h"
 # include "packet-queue.h"
@@ -9,7 +10,6 @@
 
 # include <memory>
 
-class Dispatcher;
 class ClientIOChannel;
 
 class ServerUdpTranscoder : public ServerTranscoder {

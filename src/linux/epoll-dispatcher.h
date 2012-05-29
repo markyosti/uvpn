@@ -10,6 +10,7 @@
 # include <list>
 
 class EpollDispatcher;
+class EventScheduler;
 
 class EpollDispatcher {
  public:
@@ -28,10 +29,10 @@ class EpollDispatcher {
   EpollDispatcher();
   ~EpollDispatcher();
 
-  bool Start();
-  void Stop();
-
   bool Init();
+  bool Start() { return Start(NULL); }
+  bool Start(EventScheduler* scheduler);
+  void Stop();
 
   bool AddFd(int fd, event_mask_t events,
 	     const event_handler_t* readh, const event_handler_t* writeh);

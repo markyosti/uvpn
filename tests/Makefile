@@ -7,7 +7,7 @@ CPPFLAGS = -iquote . -iquote $(BASE) -Wall -std=c++0x -ggdb3 -O0 -DPRINT_DEBUG
 # TODO: enable duma for all targets but not password.
 # TODO: is there any parameter for duma we can use to get rid of the
 # expensive checks for password?
-LDFLAGS = -lssl -lcrypto -lm -lstdc++ -rdynamic -ggdb3 # -lduma
+LDFLAGS = -lssl -lcrypto -lm -lstdc++ -rdynamic -ggdb3 -lrt # -lduma
 GTEST = gtest-main.o gtest.o
 COMMON = $(SRC)/backtrace.o
 
@@ -37,6 +37,8 @@ test-netlink-interfaces: $(GTEST) $(COMMON) test-netlink-interfaces.o $(SRC)/lin
 test-ip-addresses: $(GTEST) $(COMMON) test-ip-addresses.o $(SRC)/ip-addresses.o
 test-ip-manager: $(GTEST) $(COMMON) test-ip-manager.o $(SRC)/ip-addresses.o $(SRC)/ip-manager.o $(SRC)/linux/netlink-interfaces.o
 test-connection-key: $(GTEST) $(COMMON) test-connection-key.o
+test-timer: $(GTEST) $(COMMON) test-timer.o $(SRC)/linux/clock-timers.o
+test-event-scheduler: $(GTEST) $(COMMON) test-event-scheduler.o $(SRC)/linux/clock-timers.o $(SRC)/event-scheduler.o
 
 $(SRC)/%.o:
 	@$(MAKE) --no-print-directory -C $(SRC) $*.o
