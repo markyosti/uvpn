@@ -20,28 +20,29 @@ SYSLINUX = ./linux/netlink-interfaces.o ./linux/epoll-dispatcher.o ./linux/clock
 #### VARIOUS CONSTANTS
 SYSTEM = linux
 
-all: $(SYSTEM)
+ifeq ($(SYSTEM), linux)
+SYSDEPS = $(SYSLINUX)
+CPPFLAGS += -DUVPN_SYSTEM=LINUX
+endif
 
-linux: LDFLAGS += $(SYSLINUX)
-linux: CPPFLAGS += -DUVPN_SYSTEM=LINUX
-linux: $(SYSLINUX) targets
+all: targets
 
 targets: deps uvpn-user uvpn-client uvpn-server uvpn-ip-config uvpn-ctl
 	
-#-include deps
+-include deps
 
 deps: Makefile
 	fastdep --extraremakedep=Makefile --remakedeptarget=deps *.cc > deps
 
-uvpn-ip-config: uvpn-ip-config.o ip-addresses.o backtrace.o
+uvpn-ip-config: $(SYSDEPS) uvpn-ip-config.o ip-addresses.o backtrace.o
 
-uvpn-user: uvpn-user.o userdb.o base64.o srp-common.o ip-addresses.o srp-passwd.o openssl-helpers.o prng.o terminal.o backtrace.o password.o
+uvpn-user: $(SYSDEPS) uvpn-user.o userdb.o base64.o srp-common.o ip-addresses.o srp-passwd.o openssl-helpers.o prng.o terminal.o backtrace.o password.o
 
-uvpn-client: event-scheduler.o uvpn-client-main.o uvpn-client.o scramble-session-protector.o prng.o openssl-helpers.o srp-client-authenticator.o scramble-session-protector.o srp-common.o srp-client.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-client-channel.o packet-queue.o backtrace.o sockaddr.o openssl-protector.o password.o aes-session-protector.o terminal.o ip-addresses.o client-tcp-transcoder.o client-udp-transcoder.o user-chatter.o terminal-user-chatter.o client-simple-connection-manager.o daemon-controller-server.o daemon-controller.o $(LIBYAARG)
+uvpn-client: $(SYSDEPS) event-scheduler.o uvpn-client-main.o uvpn-client.o scramble-session-protector.o prng.o openssl-helpers.o srp-client-authenticator.o scramble-session-protector.o srp-common.o srp-client.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-client-channel.o packet-queue.o backtrace.o sockaddr.o openssl-protector.o password.o aes-session-protector.o terminal.o ip-addresses.o client-tcp-transcoder.o client-udp-transcoder.o user-chatter.o terminal-user-chatter.o client-simple-connection-manager.o daemon-controller-server.o daemon-controller.o $(LIBYAARG)
 
-uvpn-server: event-scheduler.o uvpn-server-main.o uvpn-server.o scramble-session-protector.o prng.o openssl-helpers.o srp-server-authenticator.o scramble-session-protector.o srp-common.o srp-server.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-server-channel.o packet-queue.o backtrace.o sockaddr.o userdb.o base64.o terminal.o openssl-protector.o password.o aes-session-protector.o ip-addresses.o ip-manager.o server-tcp-transcoder.o server-simple-connection-manager.o server-udp-transcoder.o daemon-controller-server.o daemon-controller.o $(LIBYAARG)
+uvpn-server: $(SYSDEPS) event-scheduler.o uvpn-server-main.o uvpn-server.o scramble-session-protector.o prng.o openssl-helpers.o srp-server-authenticator.o scramble-session-protector.o srp-common.o srp-server.o srp-passwd.o base64.o socket-transport.o tun-tap-common.o tun-tap-server-channel.o packet-queue.o backtrace.o sockaddr.o userdb.o base64.o terminal.o openssl-protector.o password.o aes-session-protector.o ip-addresses.o ip-manager.o server-tcp-transcoder.o server-simple-connection-manager.o server-udp-transcoder.o daemon-controller-server.o daemon-controller.o $(LIBYAARG)
 
-uvpn-ctl: event-scheduler.o daemon-controller.o daemon-controller-client.o sockaddr.o ip-addresses.o ipc-client.o uvpn-ctl-main.o socket-transport.o backtrace.o $(LIBYAARG)
+uvpn-ctl: $(SYSDEPS) event-scheduler.o daemon-controller.o daemon-controller-client.o sockaddr.o ip-addresses.o ipc-client.o uvpn-ctl-main.o socket-transport.o backtrace.o $(LIBYAARG)
 
 ipc/%-client.h ipc/%-server.h: ipc/%.ipc
 	@$(IPCGENERATOR) $<

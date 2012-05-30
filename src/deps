@@ -23,6 +23,9 @@ client-simple-connection-manager.o: client-simple-connection-manager.cc \
 	errors.h \
 	macros.h \
 	backtrace.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	prng.h \
 	charset.h \
 	password.h \
@@ -32,12 +35,9 @@ client-simple-connection-manager.o: client-simple-connection-manager.cc \
 	client-authenticator.h \
 	client-connection-manager.h \
 	protector.h \
-	stl-helpers.h \
 	scramble-session-protector.h \
 	openssl-protector.h \
 	client-io-channel.h \
-	dispatcher.h \
-	linux/epoll-dispatcher.h \
 	sockaddr.h \
 	conversions.h
 client-tcp-transcoder.o: client-tcp-transcoder.cc \
@@ -56,6 +56,9 @@ client-tcp-transcoder.o: client-tcp-transcoder.cc \
 	client-transcoder.h \
 	protector.h \
 	packet-queue.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	transport.h \
 	sockaddr.h \
 	conversions.h \
@@ -71,6 +74,9 @@ client-udp-transcoder.o: client-udp-transcoder.cc \
 	backtrace.h \
 	connection-key.h \
 	hash.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	packet-queue.h \
 	transport.h \
 	sockaddr.h \
@@ -85,21 +91,21 @@ client-udp-transcoder.o: client-udp-transcoder.cc \
 daemon-controller-client.o: daemon-controller-client.cc \
 	daemon-controller-client.h \
 	base.h \
-	ipc-client.h \
-	buffer.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
+	stl-helpers.h \
+	ipc-client.h \
+	buffer.h \
 	serializers.h \
 	transport.h \
 	sockaddr.h \
 	hash.h \
 	conversions.h \
 	ipc/daemon-controller-client.h \
-	daemon-controller.h \
-	dispatcher.h \
-	linux/epoll-dispatcher.h \
-	stl-helpers.h
+	daemon-controller.h
 daemon-controller-server.o: daemon-controller-server.cc \
 	buffer.h \
 	errors.h \
@@ -108,16 +114,16 @@ daemon-controller-server.o: daemon-controller-server.cc \
 	base.h \
 	serializers.h \
 	daemon-controller-server.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	ipc-server.h \
 	transport.h \
 	sockaddr.h \
 	hash.h \
 	conversions.h \
 	ipc/daemon-controller-server.h \
-	daemon-controller.h \
-	dispatcher.h \
-	linux/epoll-dispatcher.h \
-	stl-helpers.h
+	daemon-controller.h
 daemon-controller.o: daemon-controller.cc \
 	daemon-controller.h \
 	base.h \
@@ -202,6 +208,9 @@ packet-queue.o: packet-queue.cc \
 	macros.h \
 	backtrace.h \
 	base.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	transport.h \
 	sockaddr.h \
 	hash.h \
@@ -273,6 +282,9 @@ server-tcp-transcoder.o: server-tcp-transcoder.cc \
 	server-transcoder.h \
 	protector.h \
 	packet-queue.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	transport.h \
 	sockaddr.h \
 	conversions.h \
@@ -280,12 +292,15 @@ server-tcp-transcoder.o: server-tcp-transcoder.cc \
 	serializers.h
 server-udp-transcoder.o: server-udp-transcoder.cc \
 	server-udp-transcoder.h \
-	server-transcoder.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	base.h \
-	buffer.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
+	stl-helpers.h \
+	server-transcoder.h \
+	buffer.h \
 	transport.h \
 	sockaddr.h \
 	hash.h \
@@ -301,12 +316,15 @@ server-udp-transcoder.o: server-udp-transcoder.cc \
 	serializers.h
 server-unethical-transcoder.o: server-unethical-transcoder.cc \
 	server-unethical-transcoder.h \
-	server-transcoder.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	base.h \
-	buffer.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
+	stl-helpers.h \
+	server-transcoder.h \
+	buffer.h \
 	transport.h \
 	sockaddr.h \
 	hash.h \
@@ -371,7 +389,10 @@ srp-client-authenticator.o: srp-client-authenticator.cc \
 	user-chatter.h \
 	conversions.h \
 	terminal.h \
-	client-io-channel.h
+	client-io-channel.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h
 srp-client.o: srp-client.cc \
 	srp-client.h \
 	base.h \
@@ -475,19 +496,19 @@ tun-tap-client-channel.o: tun-tap-client-channel.cc \
 	protector.h \
 	base.h \
 	macros.h \
-	client-connection-manager.h \
-	buffer.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	errors.h \
 	backtrace.h \
+	stl-helpers.h \
+	client-connection-manager.h \
+	buffer.h \
 	prng.h \
 	charset.h \
 	password.h \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
-	dispatcher.h \
-	linux/epoll-dispatcher.h \
-	stl-helpers.h \
 	tun-tap-common.h \
 	packet-queue.h \
 	transport.h \
@@ -500,21 +521,27 @@ tun-tap-client-channel.o: tun-tap-client-channel.cc \
 tun-tap-common.o: tun-tap-common.cc \
 	tun-tap-common.h \
 	base.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	errors.h \
 	macros.h \
 	backtrace.h \
+	stl-helpers.h \
 	buffer.h
 tun-tap-server-channel.o: tun-tap-server-channel.cc \
 	tun-tap-server-channel.h \
 	io-channel-id.h \
 	server-io-channel.h \
-	protector.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
 	base.h \
+	errors.h \
 	macros.h \
+	backtrace.h \
+	stl-helpers.h \
+	protector.h \
 	server-connection-manager.h \
 	buffer.h \
-	errors.h \
-	backtrace.h \
 	prng.h \
 	charset.h \
 	password.h \
@@ -526,9 +553,6 @@ tun-tap-server-channel.o: tun-tap-server-channel.cc \
 	sockaddr.h \
 	conversions.h \
 	tun-tap-common.h \
-	dispatcher.h \
-	linux/epoll-dispatcher.h \
-	stl-helpers.h \
 	packet-queue.h \
 	transport.h \
 	interfaces.h \
@@ -764,16 +788,16 @@ deps: \
 	base64.h \
 	base64.cc \
 	client-simple-connection-manager.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
 	client-authenticator.h \
 	client-connection-manager.h \
-	stl-helpers.h \
 	scramble-session-protector.h \
 	client-io-channel.h \
-	dispatcher.h \
-	linux/epoll-dispatcher.h \
 	sockaddr.h \
 	client-simple-connection-manager.cc \
 	client-tcp-transcoder.h \
