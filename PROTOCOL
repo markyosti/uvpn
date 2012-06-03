@@ -714,3 +714,95 @@ let's forget about the abstraction layers for a minute:
     data, or terminate the connection? depending on the status returned.
   - 
     
+PROBLEM
+
+Let's say that we use 128 bits identifiers. When we read a packet off the wire,
+we determine the session it belongs to by looking at this 128 bit identifier.
+
+PROBLEM: let's say for example that we're sending a packet we just sent over
+udp over tcp as well, or let's say we are trying to assess which channel is
+fastest, we want to send the same packet over multiple channels, or live
+with the possibility of disrupting the connection every so often by causing
+a packet to be lost or re-ordered.
+If we implement a mechanism to avoid packet corruption, we need some sort of
+re-transmission, recovery, and error detection mechanism.
+We don't want a full sliding window implementation, the underlying protocols
+provide that. Having guarantees about ordering and re-transmission, though,
+would allow using algorithms that share the state per-connection, eg,
+compression, error correction, and so on.
+
+IDEA:
+- CT(128 bit identifier) + ET(32bit packet id, 32bit flag)
+- packet id identifies if the packet is duplicate or not, the 32 bit flags can
+  specify other options about the packet.
+
+This ties in with FEC. We want uvpn to keep working over:
+- lossy networks - even small amounts of packet loss can reduce performance
+  significantly. (plenty of papers, see for example
+  http://www.slac.stanford.edu/comp/net/wan-mon/thru-vs-loss.html)
+  Generally, handling packet loss requires an erasure code.
+- data corruption - if we encapsulate packets over DNS, for example,
+  the protocol is case insensitive, but case preserving. Some DNS servers will
+  correctly preserve cases, a few will not, especially those using 0x20.
+  In general, some transformations risk data in packets being corrupted.
+  Eg, an SMTP email attachment, headers added, or body re-coded.
+
+In both cases, it is important to note that:
+- if we use a transport based on TCP:
+  - the underlying TCP implementation will handle retransmits and erasure
+    correction. Even if we have better mechanisms in place to fix erasures,
+    the TCP connection will still block, and wait for re-transmits.
+  - we can use multiple tcp connections, but if the network is lossy, we'll
+    likely end up with the same problem on all of them.
+- data corruption will generally not happen at the transport layer.
+  It's rare to see tcp / udp packets corrupted, and if they are, we can
+  avoid problems by using erasure correction.
+  Data corruption will generally happen at layer 7, in an application specific
+  way. (eg, http protocol, maybe removing spaces from html documents, or adding
+  headers, 0x20 in DNS, mail server re-coding emails).
+
+Notes about TCP:
+- we don't need much of what TCP provides. Session identification
+  is provided directly by uvpn, re-transmission and similar are handled
+  either by protocols on top of uvpn, or by erasure codes in uvpn.
+- TCP can easily be disrupted by a listener, uvpn protocol cannot.
+- when using the TCP transport, we should consider:
+  - getsockopt(TCP_INFO), to export data about the tcp connection.
+    (mss, rtt, are important).
+  - setsockopt(TCP_KEEP*), to aggressively terminate broken tcp conenctions.
+    TCP_SYNCNT, TCP_USER_TIMEOUT
+  - TCP_MAXSEG, to tune MSS down to leave space for outer headers.
+  - READ: http://simula.no/research/nd/publications/Simula.nd.477/simula_pdf_file
+- we could create packets that look like tcp, but are not. To make them
+  look realistic, we'd need some sort of userspace tcp implementation,
+  or something simple enough that does the same thing.
+
+Notes about erasure correction:
+- we could implement erasure correction underneath the crypto layer, assuming
+  the encryption layer follows packet boundaries. Eg, if we encrypt a stream
+  that we later split into packets, we need erasure correction to live on top
+  of the encryption. If, OTOH, we encrypt each packet independently, one of
+  those encrypted packets can contain erasure correction info.
+- error correction for each packet has to be implemented on top of the crypto
+  layer, we need to correct the encrypted packets before we can decrypt them.
+
+Negotiation:
+- for anything that lives on top of the encryption or for any code that needs
+  being decoded *before* we can make sense of the data, the receiver needs to
+  know that it needs further processing to read it.
+- if this lives on top of the encryption, we probably want to conceal it, to
+  make identification of our packets harder, and to avoid that layer being
+  disrupted easily.
+- ideally, we'd want to always use a FEC code, which has no overhead if there is
+  no loss / corruption, but increases in overhead if there is. This code, its
+  use and detection could be tied to the session id, on which we can't apply
+  this code? or on which we always apply this code?
+- once the two parties can exchange the information, they can negotiate down
+  the fec and save bandwidth. But how do they recover if the link becomes lossy?
+  how do we recover from packet loss? how does the other guy know that we are
+  experiencing packet loss? there has to be a reliable feedback mechanism.
+- note also that each direction of the stream can experience different
+  treatments.
+
+Useful links:
+- openfec.org
