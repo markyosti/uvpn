@@ -246,6 +246,13 @@
 //     aggregate at some point up in the hirearchy.
 // 
 //
+// Data structures and use:
+//   - we keep a list of available channels.
+//   - for each channel, we keep a data structure with the per channel
+//     stats.
+//   - when sending a packet in a channel, see if stats have changed
+//     for any other channel. If they have, include corresponding stats.
+//
 // Proposed packet header:
 //
 // struct ClearTextHeader {
@@ -284,23 +291,22 @@
 //                     // order of 10s of ms for each packet, which will need to be
 //                     // taken into account.
 //                     // As networks and computers get better, we expect variance in
-//                     // latency to go down similarly to latency introduced by the
-//                     // softare stack.
-//
+//                     // latency to go down, same for latency introduced by the
+//                     // software stack.
 //
 //   uint32_t cid;     // Uniquely identifies this packet within the stream.
 //                     // Monotonically inceased within the channel.
-//
 //
 //   char payload[];
 // }
 //
 // struct StatsPayload {
 //   struct StatsPayloadEntry {
+//     uint32_t last_cid;
 //     uint8_t channel;
-//     uint48_t last_pid;
-//     uint8_t loss;
-//                                // 24 bits: 1 for packet that is missing, 0 otherwise. 
+//     uint24_t ael;  // Average extra latency.
+//
+//     uint32_t missing[1];  // Missing packets.
 //   } entry[1];
 // };
 //
