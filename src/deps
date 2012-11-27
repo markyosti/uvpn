@@ -16,6 +16,30 @@ backtrace.o: backtrace.cc
 base64.o: base64.cc \
 	base64.h \
 	base.h
+client-crypto-connection-manager.o: client-crypto-connection-manager.cc \
+	client-crypto-connection-manager.h \
+	base.h \
+	buffer.h \
+	errors.h \
+	macros.h \
+	backtrace.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
+	prng.h \
+	charset.h \
+	password.h \
+	client-transcoder.h \
+	connection-key.h \
+	hash.h \
+	client-authenticator.h \
+	client-connection-manager.h \
+	protector.h \
+	scramble-session-protector.h \
+	openssl-protector.h \
+	client-io-channel.h \
+	sockaddr.h \
+	conversions.h
 client-simple-connection-manager.o: client-simple-connection-manager.cc \
 	client-simple-connection-manager.h \
 	base.h \
@@ -244,6 +268,28 @@ scramble-session-protector.o: scramble-session-protector.cc \
 	backtrace.h \
 	openssl-helpers.h \
 	password.h
+server-crypto-connection-manager.o: server-crypto-connection-manager.cc \
+	server-crypto-connection-manager.h \
+	server-connection-manager.h \
+	buffer.h \
+	errors.h \
+	macros.h \
+	backtrace.h \
+	base.h \
+	prng.h \
+	charset.h \
+	password.h \
+	server-transcoder.h \
+	protector.h \
+	connection-key.h \
+	hash.h \
+	server-authenticator.h \
+	dispatcher.h \
+	linux/epoll-dispatcher.h \
+	stl-helpers.h \
+	scramble-session-protector.h \
+	openssl-protector.h \
+	server-io-channel.h
 server-simple-connection-manager.o: server-simple-connection-manager.cc \
 	server-simple-connection-manager.h \
 	server-connection-manager.h \
@@ -787,7 +833,7 @@ deps: \
 	backtrace.cc \
 	base64.h \
 	base64.cc \
-	client-simple-connection-manager.h \
+	client-crypto-connection-manager.h \
 	dispatcher.h \
 	linux/epoll-dispatcher.h \
 	stl-helpers.h \
@@ -799,6 +845,8 @@ deps: \
 	scramble-session-protector.h \
 	client-io-channel.h \
 	sockaddr.h \
+	client-crypto-connection-manager.cc \
+	client-simple-connection-manager.h \
 	client-simple-connection-manager.cc \
 	client-tcp-transcoder.h \
 	packet-queue.h \
@@ -834,11 +882,13 @@ deps: \
 	password.cc \
 	prng.cc \
 	scramble-session-protector.cc \
-	server-simple-connection-manager.h \
+	server-crypto-connection-manager.h \
 	server-connection-manager.h \
 	server-transcoder.h \
 	server-authenticator.h \
 	server-io-channel.h \
+	server-crypto-connection-manager.cc \
+	server-simple-connection-manager.h \
 	server-simple-connection-manager.cc \
 	server-tcp-transcoder.h \
 	server-tcp-transcoder.cc \

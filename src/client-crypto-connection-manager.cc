@@ -78,6 +78,8 @@ void ClientCryptoConnectionManager::AddConnection(
 }
 
 void ClientCryptoConnectionManager::RegisterTransport(Transport* transport) {
+  // TODO: there should be code to autodetect proxies, for example, and try to
+  // use them, rather than just pick a random transport.
   transport_.reset(transport);
 }
 

@@ -119,10 +119,12 @@ class ClientCryptoConnectionManager : public ClientConnectionManager {
   typedef unordered_map<ConnectionKey, Session*> SessionsMap;
   SessionsMap sessions_map_;
 
+  map<int, ClientAuthenticator*> authenticators_;
+
   auto_ptr<ClientIOChannel> channel_;
+  // map<int, ClientIOChannel*> channels_;
+ 
   auto_ptr<ClientAuthenticator> authenticator_;
-//  map<int, ClientIOChannel*> channels_;
-//  map<int, ClientAuthenticator*> authenticators_;
 
   auto_ptr<Transport> transport_;
   auto_ptr<ClientTranscoder> transcoder_;
