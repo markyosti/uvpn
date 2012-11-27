@@ -1,3 +1,11 @@
+  // TODO: a client may be able to use multiple channels, like a proxy
+  // channel or a tun tap channel. Which channels to start should be
+  // picked by the user? Some channels need to negotiate parameters
+  // with the other end, like an ip address to use and similar, they
+  // can't really be brought up until we have an established session.
+  // Other channels instead can become active straight, and can actually
+  // pick the session to be used.
+
 - High level things to do:
   - make it robust
     - retry (if username or password are wrong)
