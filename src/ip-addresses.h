@@ -6,6 +6,8 @@
 
 class IPAddress {
  public:
+  virtual ~IPAddress() {}
+
   static IPAddress* Parse(const string& string);
   static IPAddress* Parse(const sockaddr* sockaddr, socklen_t socklen);
 

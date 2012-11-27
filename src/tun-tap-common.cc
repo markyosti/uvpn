@@ -11,6 +11,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 
 TunTapDevice::TunTapDevice() : fd_(-1) {
 }
