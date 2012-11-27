@@ -29,6 +29,8 @@
 #include "daemon-controller.h"
 #include "conversions.h"
 
+#include <unistd.h>
+
 BoundChannel* DaemonController::Connect(
     Transport* transport, const char* type, const char* name) {
   LOG_DEBUG();
