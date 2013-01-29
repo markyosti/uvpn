@@ -66,6 +66,10 @@ void UvpnClient::Run() {
   // Initialize IO channels. Client IO channels wait for packets / requests
   // from the user, and forward them to the server.
   TunTapClientChannel io_tuntap(&dispatcher, &config);
+  if (!io_tuntap.Init()) {
+    LOG_FATAL("could not initialize tun tap handler");
+    return;
+  }
   //ProxyChannel io_proxy(&dispatcher, &socket_api);
   //ProxyChannel io_socks(&dispatcher, &socket_api);
 

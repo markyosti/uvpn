@@ -34,6 +34,7 @@ bool TunTapServerChannel::Init() {
 
 void TunTapServerChannel::HandleConnect(ServerConnectedSession* session) {
   LOG_DEBUG();
+  // TODO: track all sessions somewhere!
   new Session(dispatcher_, session, local_address_, ip_manager_.get(), network_config_);
 }
 

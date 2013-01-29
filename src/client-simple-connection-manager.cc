@@ -134,7 +134,7 @@ void ClientSimpleConnectionManager::Session::AuthenticationDoneHandler(
     case ClientAuthenticator::SessionMaybeAuthenticated:
       SetEncoder(encoder);
       SetDecoder(decoder);
-      channel_->Start(this);
+      channel_->HandleSession(this);
       break;
 
     case ClientAuthenticator::SessionFailed:

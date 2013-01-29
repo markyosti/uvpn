@@ -15,7 +15,9 @@ class ClientIOChannel {
   virtual ~ClientIOChannel() {}
 
   virtual int GetId() = 0;
-  virtual void Start(ClientConnectedSession* session) = 0;
+  virtual bool Init() = 0;
+
+  virtual void HandleSession(ClientConnectedSession* session) = 0;
 };
 
 #endif /* CLIENT_IO_CHANNEL_H */

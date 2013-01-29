@@ -9,18 +9,41 @@ TunTapClientChannel::TunTapClientChannel(
     Dispatcher* dispatcher, NetworkConfig* config)
     : ClientIOChannel(dispatcher),
       dispatcher_(dispatcher),
-      network_config_(config),
-      server_config_callback_(
-        bind(&TunTapClientChannel::ServerConfigCallback, this, placeholders::_1, placeholders::_2)),
-      server_packet_callback_(
-        bind(&TunTapClientChannel::ServerPacketCallback, this, placeholders::_1, placeholders::_2)),
-      tun_tap_read_callback_(bind(&TunTapClientChannel::TunTapReadCallback, this)),
-      tun_tap_write_callback_(bind(&TunTapClientChannel::TunTapWriteCallback, this)),
-      session_(NULL) {
+      network_config_(config) {
   LOG_DEBUG();
 }
 
-void TunTapClientChannel::ServerConfigCallback(
+bool TunTapClientChannel::Init() {
+  LOG_DEBUG();
+  return true;
+}
+
+void TunTapClientChannel::HandleSession(ClientConnectedSession* session) {
+  LOG_DEBUG();
+
+  // TODO: track all sessions somewhere!
+  new Session(dispatcher_, session, network_config_);
+}
+
+TunTapClientChannel::Session::Session(
+    Dispatcher* dispatcher, ClientConnectedSession* session,
+    NetworkConfig* config)
+    : dispatcher_(dispatcher),
+      network_config_(config),
+      server_config_callback_(
+        bind(&TunTapClientChannel::Session::ServerConfigCallback, this, placeholders::_1, placeholders::_2)),
+      server_packet_callback_(
+        bind(&TunTapClientChannel::Session::ServerPacketCallback, this, placeholders::_1, placeholders::_2)),
+      tun_tap_read_callback_(bind(&TunTapClientChannel::Session::TunTapReadCallback, this)),
+      tun_tap_write_callback_(bind(&TunTapClientChannel::Session::TunTapWriteCallback, this)),
+      session_(session) {
+  // Prepare to receive data back from the server.
+  // TODO: move this before Open, and add retry logic!
+  // TODO: set a close callback handler!
+  session->SetCallbacks(&server_config_callback_, NULL);
+}
+
+void TunTapClientChannel::Session::ServerConfigCallback(
     ClientConnectedSession* session, OutputCursor* cursor) {
   LOG_DEBUG();
 
@@ -122,7 +145,7 @@ void TunTapClientChannel::ServerConfigCallback(
   return;
 }
 
-void TunTapClientChannel::TunTapWriteCallback() {
+void TunTapClientChannel::Session::TunTapWriteCallback() {
   LOG_DEBUG();
 
   if (tun_tap_queue_.Pending()) {
@@ -141,7 +164,7 @@ void TunTapClientChannel::TunTapWriteCallback() {
   }
 }
 
-void TunTapClientChannel::TunTapReadCallback() {
+void TunTapClientChannel::Session::TunTapReadCallback() {
   LOG_DEBUG();
 
   // TODO: 4096 should be enough, but maybe we should (1) have this
@@ -156,7 +179,7 @@ void TunTapClientChannel::TunTapReadCallback() {
   session_->SendMessage();
 }
 
-void TunTapClientChannel::ServerPacketCallback(
+void TunTapClientChannel::Session::ServerPacketCallback(
     ClientConnectedSession* session, OutputCursor* cursor) {
   LOG_DEBUG();
 
@@ -174,13 +197,4 @@ void TunTapClientChannel::ServerPacketCallback(
   }
 }
 
-void TunTapClientChannel::Start(ClientConnectedSession* session) {
-  LOG_DEBUG();
 
-  session_ = session;
-
-  // Prepare to receive data back from the server.
-  // TODO: move this before Open, and add retry logic!
-  // TODO: set a close callback handler!
-  session->SetCallbacks(&server_config_callback_, NULL);
-}
