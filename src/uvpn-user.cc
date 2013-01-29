@@ -10,11 +10,6 @@
 #include <string.h>
 #include <string>
 
-void Shred(char* password, int size) {
-  for (int i = 0; i < size; ++i)
-    password[i] = '\0';
-}
-
 // TODO: move this in password.h and password.cc (in ScopedPassword).
 bool GetPassword(ScopedPassword* retval) {
   Terminal terminal;
