@@ -133,19 +133,26 @@ class OutputCursor {
   explicit OutputCursor(const OutputCursor& cursor);
   ~OutputCursor();
 
-  // Get a pointer to the data into the buffer. You can safely access
-  // ContiguousSize() bytes from this pointer.
+  //! Get a pointer to the data into the buffer. You can safely access
+  //! ContiguousSize() bytes from this pointer.
   const char* Data() const { return Pointer(); }
   char* Data() { return Pointer(); }
-  // Consume some data from the current buffer. After calling Increment(),
-  // Data() might return a different pointer and ContiguousSize() will return
-  // a different size.
-  void Increment(unsigned int amount);
 
   //! Prepares an Iovec pointing to as much data in the buffer as possible.
   //! Note that the caller is responsible to call Increment(). Until then,
   //! data is not marked as read and still available in the buffer.
   unsigned int GetIovec(Iovec* vect, unsigned int* size) const;
+
+  //! Copies size bytes of data into buffer without marking the data as read.
+  //! Caller is responsible to call Increment() to consumen the data. Calling
+  //! Get() multiple times without calling Increment() will cause the same data
+  //! to be read again and again.
+  unsigned int Get(char* buffer, unsigned int size) const;
+
+  //! Consume some data from the current buffer. After calling Increment(),
+  //! Data() might return a different pointer and ContiguousSize() will return
+  //! a different size.
+  void Increment(unsigned int amount);
 
   //! Copies size bytes of data into buffer and marks the data as read.
   //! Returns the number of bytes effectively read.
@@ -376,22 +383,23 @@ inline void OutputCursor::Increment(unsigned int amount) {
   } while (amount && CurrentChunkContiguousSize());
 }
 
-inline unsigned int OutputCursor::Consume(char* ptr, unsigned int size) {
-  unsigned int tocopy;
-  unsigned int left = size;
-  while (left && LeftSize()) {
-    tocopy = min(left, ContiguousSize());
+inline unsigned int OutputCursor::Get(char* ptr, unsigned int size) const {
+  unsigned int left_to_copy(size);
+  BufferChunk* chunk(CurrentChunk());
+  unsigned int offset(offset_);
 
-    LOG_DEBUG("copying %d bytes (requested=%d, left=%d, contiguous=%d)",
-	  tocopy, size, left, ContiguousSize());
-    memcpy(ptr, Data(), tocopy);
-    Increment(tocopy);
+  while (chunk && left_to_copy) {
+    unsigned int to_copy(min(left_to_copy, chunk->Used() - offset));
+    memcpy(ptr, chunk->Data() + offset, to_copy);
 
-    left -= tocopy;
-    ptr += tocopy;
-  }
+    offset = 0;
 
-  return size - left;
+    ptr += to_copy;
+    left_to_copy -= to_copy;
+    chunk = chunk->Next();
+  } 
+
+  return size - left_to_copy;
 }
 
 inline unsigned int OutputCursor::GetIovec(
@@ -422,6 +430,23 @@ inline unsigned int OutputCursor::GetIovec(
 
   *size = count;
   return retval;
+}
+
+inline unsigned int OutputCursor::Consume(char* ptr, unsigned int size) {
+  unsigned int left(size);
+  while (left && LeftSize()) {
+    unsigned int tocopy(min(left, ContiguousSize()));
+
+    LOG_DEBUG("copying %d bytes (requested=%d, left=%d, contiguous=%d)",
+	  tocopy, size, left, ContiguousSize());
+    memcpy(ptr, Data(), tocopy);
+    Increment(tocopy);
+
+    left -= tocopy;
+    ptr += tocopy;
+  }
+
+  return size - left;
 }
 
 inline void OutputCursor::ConsumeString(string* str) {

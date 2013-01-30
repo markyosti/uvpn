@@ -4,7 +4,7 @@
 TEST(BufferTest, Base) {
   Buffer buffer;
 
-  EXPECT_EQ(0, buffer.Input()->ContiguousSize());
+  EXPECT_EQ(0u, buffer.Input()->ContiguousSize());
 
   const char data[] = "this is a random string (not really)";
   buffer.Input()->Add(data, sizeof(data));
@@ -30,7 +30,7 @@ TEST(BufferTest, AddWrapsCorrectly) {
   for (int  i = 0; i < 8192; i++)
     buffer.Input()->Add(data, size);
 
-  EXPECT_EQ(16354, buffer.Output()->ContiguousSize());
+  EXPECT_EQ(16354u, buffer.Output()->ContiguousSize());
   EXPECT_EQ(8192 * size, buffer.Output()->LeftSize());
 
   LOG_DEBUG("size %d (%d)", 8192 * size, size);
@@ -110,7 +110,59 @@ TEST(BufferTest, DirectAccess) {
   }
 }
 
-TEST(BufferTest, ConsumeIoVec) {
+TEST(BufferTest, Get) {
+  Buffer buffer;
+  const char data[] = "this is a random string (not really)";
+  int size = sizeof(data);
+
+  string comparison;
+  comparison.reserve(size * 8192);
+  for (int i = 0; i < 8192; i++) {
+    comparison.append(data, size - 1);
+    buffer.Input()->Add(data, size - 1);
+  }
+  buffer.Input()->Add("", 1);
+  comparison.append("", 1);
+
+  // Allocate a buffer larger than needed, as we will try different things.
+  char temp[2 * (sizeof(data) * 8192 + 1)];
+
+  int expected_left_size = buffer.Output()->LeftSize();
+  int expected_contiguous_size = buffer.Output()->ContiguousSize();
+  ASSERT_EQ((sizeof(data) - 1) * 8192 + 1, expected_left_size);
+
+  // Short Get, nothing should be updated, data should be correct.
+  EXPECT_EQ(10, buffer.Output()->Get(temp, 10));
+  EXPECT_EQ(expected_left_size, buffer.Output()->LeftSize());
+  EXPECT_EQ(expected_contiguous_size, buffer.Output()->ContiguousSize());
+  EXPECT_EQ(0, memcmp(comparison.c_str(), temp, 10));
+
+  // Long Get, nothing should be updated, only some data copied. 
+  EXPECT_EQ(expected_left_size,
+            buffer.Output()->Get(temp, 3 * expected_left_size));
+  EXPECT_EQ(expected_left_size, buffer.Output()->LeftSize());
+  EXPECT_EQ(expected_contiguous_size, buffer.Output()->ContiguousSize());
+  EXPECT_EQ(0, memcmp(comparison.c_str(), temp, expected_contiguous_size));
+
+  // Exact Get, same as above.
+  EXPECT_EQ(expected_left_size,
+            buffer.Output()->Get(temp, expected_left_size));
+  EXPECT_EQ(expected_left_size, buffer.Output()->LeftSize());
+  EXPECT_EQ(expected_contiguous_size, buffer.Output()->ContiguousSize());
+  EXPECT_EQ(0, memcmp(comparison.c_str(), temp, expected_left_size));
+
+  // 0 Get.
+  EXPECT_EQ(0, buffer.Output()->Get(temp, 0));
+  EXPECT_EQ(expected_left_size, buffer.Output()->LeftSize());
+  EXPECT_EQ(expected_contiguous_size, buffer.Output()->ContiguousSize());
+
+  // Get on empty buffer.
+  Buffer empty;
+  EXPECT_EQ(0, empty.Output()->Get(temp, 0));
+  EXPECT_EQ(0, empty.Output()->Get(temp, 100));
+}
+
+TEST(BufferTest, GetIovec) {
   Buffer buffer;
   const char data[] = "this is a random string (not really)";
   int dsize = sizeof(data);
