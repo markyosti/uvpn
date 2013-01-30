@@ -32,7 +32,7 @@
 int main(int argc, const char** argv) {
   ConfigParserArgv parser(
       ConfigParser::Default,
-      "Controls a yovpn client or server running on this machine.");
+      "Controls a uvpn client or server running on this machine.");
 
   StandardOptions options(&parser);
   UvpnCtl controller(&parser);

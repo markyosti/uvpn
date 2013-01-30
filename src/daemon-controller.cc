@@ -51,7 +51,7 @@ AcceptingChannel* DaemonController::Listen(
 string DaemonController::MakeName(
     const char* type, const char* name) {
   // TODO: makek this configurable, with a reasonable default.
-  static const char* path = "/var/run/yovpn/yovpn-ctl.";
+  static const char* path = "/var/run/uvpn/uvpn-ctl.";
   string result(path);
 
   result.append(type);

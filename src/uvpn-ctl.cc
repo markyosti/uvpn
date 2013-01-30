@@ -35,17 +35,17 @@
 UvpnCtl::UvpnCtl(ConfigParser* parser)
     : type_(
           parser, Option::Default, "type", "t", "client",
-          "Each yovpn instance runs multiple processes to handle vpn "
+          "Each uvpn instance runs multiple processes to handle vpn "
           "connections. Tipically, you will have a 'client' process and "
           "possibly a 'server' process, but it depends on how you configured "
-          "yovpn to start."),
+          "uvpn to start."),
       name_(
           parser, Option::Default, "name", "n", "default",
-          "On a single machine you can have multiple instances of yovpn "
+          "On a single machine you can have multiple instances of uvpn "
           "running, each one with its own set of processes, and each one "
           "with its own name. With this option, you can specify which "
-          "yovpn instance you want to control. "
-          "If you did not change the default name and only run one yovpn, "
+          "uvpn instance you want to control. "
+          "If you did not change the default name and only run one uvpn, "
           "you don't need to change this option."),
       cmd_server_(
           parser, Command::Default, "server",
