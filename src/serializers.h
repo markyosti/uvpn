@@ -126,12 +126,12 @@ inline bool EncodeToBuffer(
 }
 
 inline int DecodeFromBuffer(OutputCursor* cursor, uint8_t* num) {
-  int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
+  int retval = cursor->Consume(reinterpret_cast<char*>(num), sizeof(*num));
   return sizeof(*num) - retval;
 }
 
 inline int DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
-  int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
+  int retval = cursor->Consume(reinterpret_cast<char*>(num), sizeof(*num));
   if (retval < static_cast<int>(sizeof(*num)))
     return sizeof(*num) - retval;
   *num = ntohs(*num);
@@ -139,7 +139,7 @@ inline int DecodeFromBuffer(OutputCursor* cursor, int16_t* num) {
 }
 
 inline int DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
-  int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
+  int retval = cursor->Consume(reinterpret_cast<char*>(num), sizeof(*num));
   if (retval < static_cast<int>(sizeof(*num)))
     return sizeof(*num) - retval;
   *num = ntohs(*num);
@@ -147,7 +147,7 @@ inline int DecodeFromBuffer(OutputCursor* cursor, uint16_t* num) {
 }
 
 inline int DecodeFromBuffer(OutputCursor* cursor, uint32_t* num) {
-  int retval = cursor->Get(reinterpret_cast<char*>(num), sizeof(*num));
+  int retval = cursor->Consume(reinterpret_cast<char*>(num), sizeof(*num));
   if (retval < static_cast<int>(sizeof(*num)))
     return sizeof(*num) - retval;
   *num = ntohl(*num);
@@ -159,7 +159,7 @@ inline int DecodeFromBuffer(OutputCursor* cursor, string* str) {
   int result = DecodeFromBuffer(cursor, &size);
   if (result)
     return result;
-  return cursor->GetString(str, size);
+  return cursor->ConsumeString(str, size);
 }
 
 template<typename FIRST, typename SECOND>

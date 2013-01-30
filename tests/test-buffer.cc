@@ -44,7 +44,7 @@ TEST(BufferTest, AddWrapsCorrectly) {
   int ssize = (4096 * size) - 10;
   char* space = new char[ssize];
 
-  EXPECT_EQ(ssize - 1, output.Get(space, ssize - 1));
+  EXPECT_EQ(ssize - 1, output.Consume(space, ssize - 1));
   space[ssize - 1] = '\0';
 
   EXPECT_EQ(8192 * size - (ssize - 1), output.LeftSize());
@@ -52,13 +52,13 @@ TEST(BufferTest, AddWrapsCorrectly) {
 
   int lsize = (4096 * size) + 100;
   char* left = new char[lsize];
-  EXPECT_EQ(4096 * size + 10 + 1, output.Get(left, lsize - 1));
+  EXPECT_EQ(4096 * size + 10 + 1, output.Consume(left, lsize - 1));
 
   delete [] space;
   delete [] left;
 }
 
-TEST(BufferTest, GetString) {
+TEST(BufferTest, ConsumeString) {
   Buffer buffer;
   const char data[] = "this is a random string (not really)";
   int size = sizeof(data);
@@ -75,7 +75,7 @@ TEST(BufferTest, GetString) {
   OutputCursor outcursor(*buffer.Output());
   ASSERT_EQ(comparison.size(), static_cast<unsigned int>(outcursor.LeftSize()));
   string filled;
-  outcursor.GetString(&filled);
+  outcursor.ConsumeString(&filled);
   EXPECT_EQ(comparison, filled);
 }
 
@@ -110,7 +110,7 @@ TEST(BufferTest, DirectAccess) {
   }
 }
 
-TEST(BufferTest, GetIoVec) {
+TEST(BufferTest, ConsumeIoVec) {
   Buffer buffer;
   const char data[] = "this is a random string (not really)";
   int dsize = sizeof(data);
@@ -157,12 +157,12 @@ TEST(BufferTest, MultipleOutputCursors) {
   EXPECT_EQ(261664, cursor2.LeftSize());
   EXPECT_EQ(261664, buffer.Output()->LeftSize());
 
-  EXPECT_EQ(sizeof(space1), cursor1.Get(space1, sizeof(space1)));
+  EXPECT_EQ(sizeof(space1), cursor1.Consume(space1, sizeof(space1)));
   EXPECT_EQ(257664, cursor1.LeftSize());
   EXPECT_EQ(261664, cursor2.LeftSize());
   EXPECT_EQ(261664, buffer.Output()->LeftSize());
 
-  EXPECT_EQ(sizeof(space2), cursor2.Get(space2, sizeof(space2)));
+  EXPECT_EQ(sizeof(space2), cursor2.Consume(space2, sizeof(space2)));
   EXPECT_EQ(257664, cursor1.LeftSize());
   EXPECT_EQ(257664, cursor2.LeftSize());
   EXPECT_EQ(261664, buffer.Output()->LeftSize());
@@ -181,7 +181,7 @@ TEST(BufferTest, ProduceConsumeProduceConsume) {
   EXPECT_EQ(size, buffer.Output()->LeftSize());
 
   string read;
-  buffer.Output()->GetString(&read);
+  buffer.Output()->ConsumeString(&read);
   EXPECT_EQ(data, read);
   EXPECT_EQ(0, buffer.Output()->LeftSize());
 
@@ -189,7 +189,7 @@ TEST(BufferTest, ProduceConsumeProduceConsume) {
   EXPECT_EQ(size2, buffer.Output()->LeftSize());
 
   read.clear();
-  buffer.Output()->GetString(&read);
+  buffer.Output()->ConsumeString(&read);
   EXPECT_EQ(data2, read);
   EXPECT_EQ(0, buffer.Output()->LeftSize());
 }

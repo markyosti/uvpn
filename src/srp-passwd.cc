@@ -62,7 +62,7 @@ void SrpSecret::ToSecret(string* secret) {
   EncodeToBuffer(static_cast<uint16_t>(index_), buffer.Input());
   EncodeToBuffer(salt_, buffer.Input());
   EncodeToBuffer(v_, buffer.Input());
-  buffer.Output()->GetString(secret);
+  buffer.Output()->ConsumeString(secret);
 }
 
 bool SrpSecret::FromSecret(const string& username, const string& secret) {

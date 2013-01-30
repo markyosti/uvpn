@@ -121,7 +121,7 @@ int DecodeFromBuffer(OutputCursor* cursor, BigNumber* bn) {
     // (in a temporary buffer), and then parse it.
     // TODO: we can do better than this...
     string temp;
-    cursor->GetString(&temp, size);
+    cursor->ConsumeString(&temp, size);
     bn->SetFromBinary(temp);
   }
 

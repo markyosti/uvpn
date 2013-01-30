@@ -142,15 +142,19 @@ class OutputCursor {
   // a different size.
   void Increment(unsigned int amount);
 
-  // Note that GetIovec returns pointers into the buffer, so data is not
-  // consumed. You must call Increment() to remove data from buffer.
+  //! Prepares an Iovec pointing to as much data in the buffer as possible.
+  //! Note that the caller is responsible to call Increment(). Until then,
+  //! data is not marked as read and still available in the buffer.
   unsigned int GetIovec(Iovec* vect, unsigned int* size) const;
 
-  // Note that data read through Get.* methods is consumed, eg, buffer is
-  // Increment()ed by the amount of data read.
-  unsigned int Get(char* buffer, unsigned int size);
-  void GetString(string* str);
-  int GetString(string* str, unsigned int size);
+  //! Copies size bytes of data into buffer and marks the data as read.
+  //! Returns the number of bytes effectively read.
+  unsigned int Consume(char* buffer, unsigned int size);
+  //! Copies size bytes of data into str and marks the data as read.
+  //! Returns the number of bytes effectively read.
+  int ConsumeString(string* str, unsigned int size);
+  //! Copies the whole buffer into str and marks the data as read.
+  void ConsumeString(string* str);
 
   // How many bytes can be read in one go from Data() now?
   unsigned int ContiguousSize() const;
@@ -372,7 +376,7 @@ inline void OutputCursor::Increment(unsigned int amount) {
   } while (amount && CurrentChunkContiguousSize());
 }
 
-inline unsigned int OutputCursor::Get(char* ptr, unsigned int size) {
+inline unsigned int OutputCursor::Consume(char* ptr, unsigned int size) {
   unsigned int tocopy;
   unsigned int left = size;
   while (left && LeftSize()) {
@@ -420,11 +424,11 @@ inline unsigned int OutputCursor::GetIovec(
   return retval;
 }
 
-inline void OutputCursor::GetString(string* str) {
-  GetString(str, LeftSize());
+inline void OutputCursor::ConsumeString(string* str) {
+  ConsumeString(str, LeftSize());
 }
 
-inline int OutputCursor::GetString(string* str, unsigned int size) {
+inline int OutputCursor::ConsumeString(string* str, unsigned int size) {
   str->reserve(size);
 
   unsigned int tocopy;

@@ -43,7 +43,7 @@ ScrambleSessionDecoder::Result ScrambleSessionDecoder::Start(
     OutputCursor* input, InputCursor* output, StartOptions options) {
   const unsigned int kKeyLength = OpensslProtector::kBF_CBC.KeyLength();
   char key[kKeyLength + 1];
-  if (input->Get(key, kKeyLength) < kKeyLength) {
+  if (input->Consume(key, kKeyLength) < kKeyLength) {
     LOG_DEBUG("not enough bytes to read key (kKeyLength of %d required)", kKeyLength);
     return MORE_DATA_REQUIRED;
   }

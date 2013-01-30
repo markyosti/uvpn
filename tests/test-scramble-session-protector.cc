@@ -51,8 +51,8 @@ TEST(ScrambleSessionProtector, LongerEncodeDecode) {
   EXPECT_EQ(8192 * (size - 1), decryptcursor.LeftSize());
 
   string clear, decrypt;
-  cleartext.Output()->GetString(&clear);
-  decryptcursor.GetString(&decrypt);
+  cleartext.Output()->ConsumeString(&clear);
+  decryptcursor.ConsumeString(&decrypt);
 
   EXPECT_EQ(clear, decrypt);
 }

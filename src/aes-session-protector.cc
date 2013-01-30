@@ -28,7 +28,7 @@ int AesSessionKey::RecvSalt(OutputCursor* cursor) {
   LOG_DEBUG();
 
   // Pseudo code: read salt from input buffer, apply PBKDF2 on key.
-  int result = cursor->Get(salt_, AesSessionKey::kKeyLengthInBytes);
+  int result = cursor->Consume(salt_, AesSessionKey::kKeyLengthInBytes);
   if (result < AesSessionKey::kKeyLengthInBytes) {
     LOG_ERROR("no salt in buffer");
     // TODO: handle error.
@@ -104,7 +104,7 @@ AesSessionDecoder::Result AesSessionDecoder::Start(
   // have to be copied out immediately.
 
   char iv[OpensslProtector::kAES_256_CBC.IVLength()];
-  if (input->Get(iv, sizeof_array(iv)) < sizeof_array(iv))
+  if (input->Consume(iv, sizeof_array(iv)) < sizeof_array(iv))
     return MORE_DATA_REQUIRED;
 
   return OpensslDecoder::Start(key_, iv, options);
