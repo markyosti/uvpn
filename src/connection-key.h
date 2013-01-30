@@ -21,7 +21,7 @@
 //!     that if there is one object per connection (eg, a Session object), the
 //!     address of this object may be enough to uniquely identify the
 //!     connection. 
-class ConnectionKey : public StaticKey<20> {
+class ConnectionKey : public DynamicKey<20> {
  public:
   explicit ConnectionKey(const void* handler) : handler_(handler) {}
   const void* Handler() const { return handler_; }

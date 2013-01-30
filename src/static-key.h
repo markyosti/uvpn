@@ -31,17 +31,17 @@
 
 //! An arbitrary blob of data usable as a key in an unordered map.
 //!
-//! StaticKey can hold any amount of data up to SIZE, and provides
-//! functors such as the StaticKey can be used in unordered maps.
+//! DynamicKey can hold any amount of data up to SIZE, and provides
+//! functors such as the DynamicKey can be used in unordered maps.
 //!
 //! @param SIZE How much data to hold at most.
 template<int SIZE>
-class StaticKey {
+class DynamicKey {
  public:
-  typedef StaticKey<SIZE> static_key_t;
+  typedef DynamicKey<SIZE> static_key_t;
   static const uint16_t kBufferSize = SIZE;
 
-  StaticKey() : size_(0) {}
+  DynamicKey() : size_(0) {}
 
   void Add(const char* data, uint16_t size) {
     DEBUG_FATAL_UNLESS(size_ + size <= kBufferSize && size_ + size >= size_)(
@@ -53,7 +53,7 @@ class StaticKey {
   uint16_t Size() const { return size_; }
   const char* Buffer() const { return buffer_; }
 
- private:
+ protected:
   char buffer_[kBufferSize];
   uint16_t size_;
 };
@@ -62,8 +62,8 @@ class StaticKey {
 // containers to handle addresses.
 FUNCTOR_EQ(
   template<int SIZE>
-  struct equal_to<StaticKey<SIZE> > {
-    size_t operator()(const StaticKey<SIZE>& first, const StaticKey<SIZE>& second) const {
+  struct equal_to<DynamicKey<SIZE> > {
+    size_t operator()(const DynamicKey<SIZE>& first, const DynamicKey<SIZE>& second) const {
       if (first.Size() != second.Size())
         return false;
   
@@ -74,15 +74,54 @@ FUNCTOR_EQ(
 
 FUNCTOR_HASH(
   template<int SIZE>
-  struct hash<StaticKey<SIZE> > {
-    // TODO(SECURITY): at construction time, we should use a random seed!
-    // and maybe a cryptographically strong hash?
-    size_t operator()(const StaticKey<SIZE>& key) const {
+  struct hash<DynamicKey<SIZE> > {
+    size_t operator()(const DynamicKey<SIZE>& key) const {
       size_t hash = DefaultHash(key.Buffer(), key.Size());
       LOG_DEBUG("getting hash %d", hash);
       return hash;
     };
   };
 )
+
+//! An arbitrary blob of data usable as a key in an unordered map.
+//!
+//! Same as StaticKey, but assumes the data is exactly as big as specified.
+//!
+//! @param SIZE How much data to hold at most.
+template<int SIZE>
+class StaticKey {
+ public:
+  typedef StaticKey<SIZE> static_key_t;
+  static const uint16_t kBufferSize = SIZE;
+
+  StaticKey() {}
+
+  void Add(const char* data) { memcpy(buffer_, data, kBufferSize); }
+  uint16_t Size() const { return kBufferSize; }
+  const char* Buffer() const { return buffer_; }
+
+ protected:
+  char buffer_[kBufferSize];
+};
+
+FUNCTOR_EQ(
+  template<int SIZE>
+  struct equal_to<StaticKey<SIZE> > {
+    size_t operator()(const StaticKey<SIZE>& first, const StaticKey<SIZE>& second) const {
+      return !memcmp(first.Buffer(), second.Buffer(), second.Size());
+    };
+  };
+)
+
+FUNCTOR_HASH(
+  template<int SIZE>
+  struct hash<StaticKey<SIZE> > {
+    size_t operator()(const StaticKey<SIZE>& key) const {
+      size_t hash = DefaultHash(key.Buffer(), key.Size());
+      return hash;
+    };
+  };
+)
+
 
 #endif /* STATIC_KEY_H */
