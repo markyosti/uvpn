@@ -32,6 +32,7 @@ client-crypto-connection-manager.o: client-crypto-connection-manager.cc \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	client-authenticator.h \
 	client-connection-manager.h \
 	protector.h \
@@ -56,6 +57,7 @@ client-simple-connection-manager.o: client-simple-connection-manager.cc \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	client-authenticator.h \
 	client-connection-manager.h \
 	protector.h \
@@ -72,6 +74,7 @@ client-tcp-transcoder.o: client-tcp-transcoder.cc \
 	macros.h \
 	errors.h \
 	backtrace.h \
+	static-key.h \
 	client-connection-manager.h \
 	buffer.h \
 	prng.h \
@@ -98,6 +101,7 @@ client-udp-transcoder.o: client-udp-transcoder.cc \
 	backtrace.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	dispatcher.h \
 	linux/epoll-dispatcher.h \
 	stl-helpers.h \
@@ -283,6 +287,7 @@ server-crypto-connection-manager.o: server-crypto-connection-manager.cc \
 	protector.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	server-authenticator.h \
 	dispatcher.h \
 	linux/epoll-dispatcher.h \
@@ -305,6 +310,7 @@ server-simple-connection-manager.o: server-simple-connection-manager.cc \
 	protector.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	server-authenticator.h \
 	dispatcher.h \
 	linux/epoll-dispatcher.h \
@@ -320,6 +326,7 @@ server-tcp-transcoder.o: server-tcp-transcoder.cc \
 	macros.h \
 	errors.h \
 	backtrace.h \
+	static-key.h \
 	server-connection-manager.h \
 	buffer.h \
 	prng.h \
@@ -358,6 +365,7 @@ server-udp-transcoder.o: server-udp-transcoder.cc \
 	password.h \
 	protector.h \
 	connection-key.h \
+	static-key.h \
 	server-authenticator.h \
 	serializers.h
 server-unethical-transcoder.o: server-unethical-transcoder.cc \
@@ -383,6 +391,7 @@ server-unethical-transcoder.o: server-unethical-transcoder.cc \
 	password.h \
 	protector.h \
 	connection-key.h \
+	static-key.h \
 	server-tcp-transcoder.h \
 	server-udp-transcoder.h
 sockaddr.o: sockaddr.cc \
@@ -424,6 +433,7 @@ srp-client-authenticator.o: srp-client-authenticator.cc \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	protector.h \
 	srp-client.h \
 	openssl-helpers.h \
@@ -496,6 +506,7 @@ srp-server-authenticator.o: srp-server-authenticator.cc \
 	protector.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	srp-server.h \
 	openssl-helpers.h \
 	srp-common.h \
@@ -555,6 +566,7 @@ tun-tap-client-channel.o: tun-tap-client-channel.cc \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	tun-tap-common.h \
 	packet-queue.h \
 	transport.h \
@@ -594,6 +606,7 @@ tun-tap-server-channel.o: tun-tap-server-channel.cc \
 	server-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	ip-manager.h \
 	ip-addresses.h \
 	sockaddr.h \
@@ -653,6 +666,7 @@ uvpn-client.o: uvpn-client.cc \
 	password.h \
 	client-transcoder.h \
 	connection-key.h \
+	static-key.h \
 	tun-tap-common.h \
 	packet-queue.h \
 	transport.h \
@@ -773,6 +787,7 @@ uvpn-server.o: uvpn-server.cc \
 	server-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	ip-manager.h \
 	ip-addresses.h \
 	sockaddr.h \
@@ -840,6 +855,7 @@ deps: \
 	client-transcoder.h \
 	connection-key.h \
 	hash.h \
+	static-key.h \
 	client-authenticator.h \
 	client-connection-manager.h \
 	scramble-session-protector.h \

@@ -14,6 +14,9 @@ using namespace std::tr1;
 
 // Helpers to deal with the c++0x transition, some things are in std or tr1
 // depending on compiler flags or version.
+//
+// TODO(SECURITY): should all functors at construction time use a random seed?
+// and maybe a cryptographically strong hash?
 # ifdef __GXX_EXPERIMENTAL_CXX0X__
 #  include <functional>
 #  include <unordered_map>
