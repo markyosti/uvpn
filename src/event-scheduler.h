@@ -83,7 +83,7 @@ class EventScheduler {
   void ProcessPendingEvents(const Timer& now) {
     while (!queue_.empty()) {
       Event* event(queue_.top());
-      if (!event->GetWhen().IsBefore(now))
+      if (!event->GetWhen().IsBefore(now) && !event->GetWhen().IsSame(now))
         return;
 
       LOG_DEBUG("running event '%s'", event->GetName());

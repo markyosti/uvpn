@@ -74,6 +74,10 @@ class ClockTimer {
     return false;
   }
 
+  bool IsSame(const ClockTimer& other) const {
+    return (ts_.tv_sec == other.ts_.tv_sec) && (ts_.tv_nsec == other.ts_.tv_nsec);
+  }
+
   ms_timer_t GetDelayFrom(const ClockTimer& past) const {
     time_t delta_sec;
 
