@@ -68,26 +68,43 @@ class ClockTimer {
       return true;
 
     if (ts_.tv_sec == other.ts_.tv_sec)
-      if (ts_.tv_nsec <= other.ts_.tv_nsec)
+      if (ts_.tv_nsec < other.ts_.tv_nsec)
         return true;
 
     return false;
   }
 
-  ms_timer_t GetDelayFrom(const ClockTimer& other) const {
-    if (IsBefore(other))
+  ms_timer_t GetDelayFrom(const ClockTimer& past) const {
+    time_t delta_sec;
+
+    // ms_timer_t is unsigned, we need to be careful about differences.
+    // Also, depending on the value of tv_nsec, we might not really have
+    // an extra second in delta_sec.
+    ms_timer_t delta_msec;
+    if (past.ts_.tv_nsec > ts_.tv_nsec) {
+      delta_sec = (ts_.tv_sec - past.ts_.tv_sec) - 1;
+      delta_msec = 1000 - ((past.ts_.tv_nsec - ts_.tv_nsec) / 1000000);
+    } else {
+      delta_sec = (ts_.tv_sec - past.ts_.tv_sec);
+      delta_msec = (ts_.tv_nsec - past.ts_.tv_nsec) / 1000000;
+    }
+
+    // delta_sec will always be < 0 if past happened after current time,
+    // in which case delay is considered to be 0.
+    if (delta_sec < 0)
       return 0;
 
-    time_t delta_sec = (ts_.tv_sec - other.ts_.tv_sec);
-    if (delta_sec < 0 ||
-        delta_sec >= static_cast<time_t>(kTimerMax / 1000))
+    // Now the delay is delta_sec * 1000 + delta_msec. The problem is
+    // that delta_sec * 1000 may overflow either time_t or ms_timer_t,
+    // and delta_sec * 1000 + delta_msec again can overflow.
+
+    if (delta_sec > static_cast<time_t>(kTimerMax / 1000))
       return kTimerMax;
 
-    ms_timer_t result = delta_sec * 1000 +
-        (ts_.tv_nsec - other.ts_.tv_nsec) / 1000000;
-    if (static_cast<time_t>(result / 1000) < delta_sec || result > kTimerMax)
+    ms_timer_t result = delta_sec * 1000 + delta_msec;
+    if (static_cast<ms_timer_t>(delta_sec) >= result || result > kTimerMax)
       return kTimerMax;
-
+    
     return result;
   }
 
