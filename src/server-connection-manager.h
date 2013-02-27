@@ -19,13 +19,13 @@ class ServerConnectedSession {
   virtual ~ServerConnectedSession() {}
 
   enum CloseReason {
-    Shutdown,  // client voluntarily closed the connection.
-    Truncated, // data was unexpectedly truncated.
-    Timeout,   // some timer expired, with expected activity not taking place.
-    Manager,   // some error detected by the manager.
-    Encoding,  // some encoding error.
-    Decoding,  // some decryption / decoding error.
-    System     // some error we cannot really identify.
+    Shutdown,  //< client voluntarily closed the connection.
+    Truncated, //< data was unexpectedly truncated.
+    Timeout,   //< some timer expired, with expected activity not taking place.
+    Manager,   //< some error detected by the manager.
+    Encoding,  //< some encoding error.
+    Decoding,  //< some decryption / decoding error.
+    System     //< some error we cannot really identify.
   };
 
   enum State {
@@ -69,6 +69,18 @@ class ServerConnectionManager {
  public:
   virtual ~ServerConnectionManager() {}
 
+  //! Checks the data provided by the client (cursor) and key and returns the
+  //! ServerConnectedSession object corresponding to this client.
+  //!
+  //! If no session is found, or the method needs more data from the client,
+  //! or it is invalid, the corresponding error is returned.
+  //!
+  //! GetSession will leave the cursor unchanged unless Ready is returned.
+  //! If a new session needs to be created, the caller is responsible for
+  //! invoking CreateSession with the proper connection object.
+  //!
+  //! GetSession is separate from CreateSession to allow transcoders to
+  //! lazily create connection objects until after the need has been verified.
   virtual ServerConnectedSession::State GetSession(
       const ConnectionKey& key, OutputCursor* cursor,
       ServerConnectedSession** session) = 0;
