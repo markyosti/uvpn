@@ -32,8 +32,7 @@ void Prng::GetZeroTerminated(char* buffer, int length) {
   for (int i = 0; i < length - 1; i++) {
     if (buffer[i])
       continue;
-
-    buffer[i] = GetIntRange(1, 255);
+    buffer[i] = static_cast<unsigned char>(GetIntRange(1, 255));
   }
   buffer[length - 1] = '\0';
 }

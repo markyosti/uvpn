@@ -82,7 +82,7 @@ AcceptingChannel* SocketTransport::StreamListenOn(const Sockaddr& address) {
   ScopedFd fd(socket(address.Family(), SOCK_STREAM, 0));
   if (!fd.IsValid()) {
     LOG_PERROR("cannot create socket");
-    return false;
+    return NULL;
   }
 
   // Don't keep lingering data around when we close the socket, close it
@@ -113,13 +113,13 @@ AcceptingChannel* SocketTransport::StreamListenOn(const Sockaddr& address) {
 
   if (bind(fd.Get(), address.Data(), address.Size()) != 0) {
     LOG_PERROR("cannot bind");
-    return false;
+    return NULL;
   }
 
   // TODO: 10? tunable parameter!
   if (listen(fd.Get(), 10) != 0) {
     LOG_PERROR("cannot listen");
-    return false;
+    return NULL;
   }
 
   return new AcceptingSocket(dispatcher_, fd.Release());

@@ -18,7 +18,7 @@ class IPAddress {
 
   virtual Sockaddr* GetSockaddr(uint16_t port) const = 0;
   virtual string AsString() const = 0;
-  virtual int Length() const = 0;
+  virtual unsigned short int Length() const = 0;
 
   virtual void Truncate(uint32_t length) = 0;
   virtual void Increment(uint32_t offset) = 0;
@@ -48,7 +48,7 @@ class InetAddress : public IPAddress {
     return string(buffer);
   }
   
-  virtual int Length() const {
+  virtual unsigned short Length() const {
     return sizeof(ADDRESS) * 8;
   }
 
