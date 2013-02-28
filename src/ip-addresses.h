@@ -112,7 +112,7 @@ class IPRange {
   bool IsInitialized() const;
 
   IPAddress* GetAddress() const;
-  int GetCidr() const;
+  unsigned short int GetCidr() const;
 
   // Returns the indexth address in this range.
   IPAddress* GetAddressIndex(int index) const;
@@ -125,7 +125,7 @@ class IPRange {
 
  private:
   IPAddress* address_;
-  uint32_t cidr_;
+  unsigned short int cidr_;
   uint32_t size_;
 
   NO_COPY(IPRange);

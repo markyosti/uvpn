@@ -290,6 +290,6 @@ IPAddress* IPRange::GetAddress() const {
   return address_;
 }
 
-int IPRange::GetCidr() const {
+unsigned short int IPRange::GetCidr() const {
   return cidr_;
 }
