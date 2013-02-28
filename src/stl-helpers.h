@@ -3,6 +3,7 @@
 
 class Holder {
  public:
+  virtual ~Holder() {}
   virtual void Delete() = 0;
 };
 
