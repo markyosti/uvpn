@@ -263,7 +263,7 @@ bool IPRange::GetIndexAddress(IPAddress* address, int* index) const {
 }
 
 void IPRange::Swap(IPRange* range) {
-  uint32_t tmp_cidr(cidr_);
+  unsigned short int tmp_cidr(cidr_);
   uint32_t tmp_size(size_);
   IPAddress* tmp_address(address_);
 

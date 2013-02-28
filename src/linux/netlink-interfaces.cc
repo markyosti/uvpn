@@ -19,7 +19,10 @@ class NetlinkSocket::Message {
   virtual ~Message() {}
 
   virtual nlmsghdr* GetHeader() = 0;
-  virtual bool ParseReply(OutputCursor* cursor);
+
+  enum parsing_result_e { OK, MORE, ERROR };
+  virtual parsing_result_e ParseReply(OutputCursor* cursor);
+  virtual parsing_result_e ParseErrorHeader(const nlmsghdr* header);
 
   void AddAttribute(unsigned short attribute, uint32_t value) {
     AddAttribute(attribute, &value, sizeof(value));
@@ -39,7 +42,7 @@ class NetlinkSocket::Message {
 class NetlinkSocket::LinkMessage : public NetlinkSocket::Message {
  public:
   LinkMessage(uint16_t type, uint16_t flags, int seq,
-	      const string& ifname, unsigned ifi_change, unsigned ifi_flags) {
+              const string& ifname, unsigned ifi_change, unsigned ifi_flags) {
     memset(&data_, 0, sizeof(data_));
 
     data_.header.nlmsg_len = NLMSG_LENGTH(sizeof(ifinfomsg));
@@ -71,7 +74,7 @@ class NetlinkSocket::LinkMessage : public NetlinkSocket::Message {
 class NetlinkSocket::IfAddrMessage : public NetlinkSocket::Message {
  public:
   IfAddrMessage(uint16_t type, uint16_t flags, int seq,
-		const IPAddress& address, int cidr, int index) {
+                const IPAddress& address, int cidr, int index) {
     memset(&data_, 0, sizeof(data_));
 
     data_.header.nlmsg_len = NLMSG_LENGTH(sizeof(ifaddrmsg));
@@ -113,12 +116,14 @@ class NetlinkSocket::DumpRoutesMessage : public NetlinkSocket::Message {
   ~DumpRoutesMessage();
 
   nlmsghdr* GetHeader() { return &data_.header; }
-  bool ParseReply(OutputCursor* cursor);
+  parsing_result_e ParseReply(OutputCursor* cursor);
 
   void GetEntries(list<RoutingEntry*>* entries);
 
  private:
-  IPAddress* ParseIPAddress(int family, rtattr* attr);
+  static void AddRoutingEntry(
+      const nlmsghdr* header, list<RoutingEntry*>* entries);
+  static IPAddress* ParseIPAddress(int family, rtattr* attr);
   const string& ParseInterface(rtattr* attr);
   list<RoutingEntry*> entries_;
 
@@ -184,34 +189,33 @@ IPAddress* NetlinkSocket::DumpRoutesMessage::ParseIPAddress(int family, rtattr* 
   return NULL;
 }
 
-bool NetlinkSocket::Message::ParseReply(OutputCursor* cursor) {
+NetlinkSocket::Message::parsing_result_e
+    NetlinkSocket::Message::ParseReply(OutputCursor* cursor) {
   const nlmsghdr* header(reinterpret_cast<const nlmsghdr*>(cursor->Data()));
-  bool status(true);
+  parsing_result_e status(MORE);
 
   while (cursor->ContiguousSize()) {
     if (cursor->LeftSize() > cursor->ContiguousSize() &&
-	(cursor->ContiguousSize() < sizeof(nlmsghdr) ||
-	 cursor->ContiguousSize() < NLMSG_ALIGN(header->nlmsg_len))) {
+        (cursor->ContiguousSize() < sizeof(nlmsghdr) ||
+         cursor->ContiguousSize() < NLMSG_ALIGN(header->nlmsg_len))) {
       // TODO: merge buffers in a smart way.
       LOG_FATAL("need to merge buffers in a smart way.");
     }
 
-    if (header->nlmsg_type == NLMSG_ERROR) {
-      const nlmsgerr* error(reinterpret_cast<const nlmsgerr*>(NLMSG_DATA(header)));
-      if ((header->nlmsg_len - sizeof(*header)) < sizeof(nlmsgerr)) {
-	LOG_ERROR("error message truncated?");
-        status = false;
-      } else {
-	if (error->error) {
-	  LOG_ERROR("netlink socket error %d", error->error);
-	  status = false;
-	} else {
-	  LOG_DEBUG("change ACKED successfully");
-	}
-      }
-    } else {
-      LOG_ERROR("unexpected reply type %d", header->nlmsg_type);
-      status = false;
+    switch (header->nlmsg_type) {
+      case NLMSG_ERROR:
+        status = ParseErrorHeader(header);
+        break;
+
+      case NLMSG_DONE:
+        LOG_DEBUG("change confirmed as DONE.");
+        if (status == MORE)
+          status = OK;
+        break;
+
+      default:
+        LOG_ERROR("unexpected reply type %d", header->nlmsg_type);
+        break;
     }
 
     cursor->Increment(NLMSG_ALIGN(header->nlmsg_len));
@@ -229,73 +233,115 @@ void NetlinkSocket::DumpRoutesMessage::GetEntries(list<RoutingEntry*>* entries) 
   entries_.swap(*entries);
 }
 
-bool NetlinkSocket::DumpRoutesMessage::ParseReply(OutputCursor* cursor) {
+NetlinkSocket::Message::parsing_result_e
+    NetlinkSocket::Message::ParseErrorHeader(const nlmsghdr* header) {
+  DEBUG_FATAL_UNLESS(header->nlmsg_type == NLMSG_ERROR)
+      ("can only be used for error messages");
+
+  parsing_result_e status(MORE);
+  const nlmsgerr* error(reinterpret_cast<const nlmsgerr*>(NLMSG_DATA(header)));
+  if ((header->nlmsg_len - sizeof(*header)) < sizeof(nlmsgerr)) {
+    LOG_ERROR("error message truncated?");
+    status = ERROR;
+  } else {
+    if (error->error) {
+      LOG_ERROR("netlink socket error %d", error->error);
+      status = ERROR;
+    } else {
+      LOG_DEBUG("change ACKED successfully");
+      status = OK;
+    }
+  }
+  return status;
+}
+
+void NetlinkSocket::DumpRoutesMessage::AddRoutingEntry(
+    const nlmsghdr* header, list<RoutingEntry*>* entries) {
+  rtmsg* msg(reinterpret_cast<rtmsg*>(NLMSG_DATA(header)));
+  rtattr* attr(RTM_RTA(NLMSG_DATA(header)));
+  int size(RTM_PAYLOAD(header));
+  RoutingEntry* entry(new RoutingEntry());
+  while (RTA_OK(attr, size)) {
+    // TODO: filter out non main table? really? (it'd be cool if we supported
+    //   updating the non main routing table).
+    // TODO: write Parse* function below. Note that we will most likely need
+    //   to rewrite IPAddress libraries to support network addresses and such. 
+    switch (attr->rta_type) {
+      case RTA_DST: {
+        IPAddress* address(ParseIPAddress(msg->rtm_family, attr));
+        if (address && entry->destination.Parse(address, msg->rtm_dst_len)) {
+          LOG_DEBUG("destination %s", entry->destination.AsString().c_str());
+        }
+        break;
+      }
+
+      case RTA_PREFSRC:
+        entry->source = ParseIPAddress(msg->rtm_family, attr);
+        break;
+
+      case RTA_GATEWAY:
+        entry->gateway = ParseIPAddress(msg->rtm_family, attr);
+        break;
+
+      case RTA_OIF:
+        entry->interface = *reinterpret_cast<unsigned int*>(RTA_DATA(attr));
+        break;
+
+      case RTA_METRICS:
+        entry->metric = *reinterpret_cast<int*>(RTA_DATA(attr));
+        break;
+
+      default:
+        LOG_DEBUG("DEFAULT");
+        break;
+    }
+
+    attr = RTA_NEXT(attr, size);
+  }
+
+  if (!entry->destination.IsInitialized() && entry->gateway) {
+    if (entry->gateway->Family() == AF_INET)
+      entry->destination.Parse("0.0.0.0/0");
+    else if(entry->gateway->Family() == AF_INET6)
+      entry->destination.Parse("::/0");
+    else
+      LOG_ERROR("unknown family? weird");
+  }
+
+  entries->push_back(entry);
+}
+
+NetlinkSocket::DumpRoutesMessage::parsing_result_e
+    NetlinkSocket::DumpRoutesMessage::ParseReply(
+        OutputCursor* cursor) {
   const nlmsghdr* header(reinterpret_cast<const nlmsghdr*>(cursor->Data()));
+
+  parsing_result_e status(MORE);
   while (cursor->ContiguousSize()) {
     if (cursor->LeftSize() > cursor->ContiguousSize() &&
-	(cursor->ContiguousSize() < sizeof(nlmsghdr) ||
-	 cursor->ContiguousSize() < NLMSG_ALIGN(header->nlmsg_len))) {
+        (cursor->ContiguousSize() < sizeof(nlmsghdr) ||
+         cursor->ContiguousSize() < NLMSG_ALIGN(header->nlmsg_len))) {
       // TODO: merge buffers in a smart way.
       LOG_FATAL("need to merge buffers in a smart way.");
     }
 
-    rtmsg* msg(reinterpret_cast<rtmsg*>(NLMSG_DATA(header)));
-    rtattr* attr(RTM_RTA(NLMSG_DATA(header)));
-    int size(RTM_PAYLOAD(header));
-    RoutingEntry* entry(new RoutingEntry());
-    while (RTA_OK(attr, size)) {
-      // TODO: filter out non main table? really? (it'd be cool if we supported
-      //   updating the non main routing table).
-      // TODO: write Parse* function below. Note that we will most likely need
-      //   to rewrite IPAddress libraries to support network addresses and such. 
-      switch (attr->rta_type) {
-	case RTA_DST: {
-	  IPAddress* address(ParseIPAddress(msg->rtm_family, attr));
-	  if (address && entry->destination.Parse(address, msg->rtm_dst_len)) {
-	    LOG_DEBUG("destination %s", entry->destination.AsString().c_str());
-	  }
-	  break;
-	}
-
-	case RTA_PREFSRC:
-	  entry->source = ParseIPAddress(msg->rtm_family, attr);
-	  break;
-
-	case RTA_GATEWAY:
-	  entry->gateway = ParseIPAddress(msg->rtm_family, attr);
-	  break;
-
-	case RTA_OIF:
-	  entry->interface = *reinterpret_cast<unsigned int*>(RTA_DATA(attr));
-	  break;
-
-	case RTA_METRICS:
-	  entry->metric = *reinterpret_cast<int*>(RTA_DATA(attr));
-	  break;
-
-	default:
-	  LOG_DEBUG("DEFAULT");
-	  break;
-      }
-
-      attr = RTA_NEXT(attr, size);
+    if (header->nlmsg_type == NLMSG_ERROR) {
+      status = ParseErrorHeader(header);
+    } else if (header->nlmsg_type == NLMSG_DONE) {
+      LOG_DEBUG("change confirmed as DONE.");
+      if (status == MORE)
+        status = OK;
+    } else if (header->nlmsg_type == RTM_NEWROUTE) {
+      LOG_DEBUG("NEW LINK RECEIVED");
+      AddRoutingEntry(header, &entries_);
+    } else {
+      LOG_ERROR("NEW unexpected reply type %d", header->nlmsg_type);
     }
-
-    if (!entry->destination.IsInitialized() && entry->gateway) {
-      if (entry->gateway->Family() == AF_INET)
-        entry->destination.Parse("0.0.0.0/0");
-      else if(entry->gateway->Family() == AF_INET6)
-        entry->destination.Parse("::/0");
-      else
-        LOG_ERROR("unknown family? weird");
-    }
-
-    entries_.push_back(entry);
     cursor->Increment(NLMSG_ALIGN(header->nlmsg_len));
     header = reinterpret_cast<const nlmsghdr*>(cursor->Data());
   }
 
-  return true;
+  return status;
 }
 
 RoutingTable::RoutingTable(NetlinkSocket* socket)
@@ -314,10 +360,15 @@ bool NetlinkSocket::Chat(Message* message) {
     return false;
 
   Buffer buffer;
-  if (!Recv(buffer.Input()))
-    return false;
+  while (Recv(buffer.Input())) {
+    NetlinkSocket::Message::parsing_result_e result = message->ParseReply(buffer.Output());
+    if (result == NetlinkSocket::Message::OK)
+      return true;
+    if (result != NetlinkSocket::Message::MORE)
+      break;
+  }
 
-  return message->ParseReply(buffer.Output());
+  return false;
 }
 
 
@@ -375,8 +426,8 @@ bool NetlinkSocket::Recv(InputCursor* input) {
     int read(recv(fd_, input->Data(), input->ContiguousSize(), 0));
     if (read < 0) {
       if (errno != EAGAIN) {
-	LOG_PERROR("read");
-	return false;
+        LOG_PERROR("read");
+        return false;
       }
 
       continue;

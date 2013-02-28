@@ -34,7 +34,7 @@ void HandleRoutes(NetworkConfig* networking, int argc, char** argv) {
     }
   } else if (!strcmp(command, "add")) {
     if (argc < 3)
-      LOG_FATAL("need network address (in cidr format) to del");
+      LOG_FATAL("need interface and network address (in cidr format) to add");
 
     const char* device(argv[1]);
     Interface* interface(networking->GetInterface(device));
@@ -56,7 +56,7 @@ void HandleRoutes(NetworkConfig* networking, int argc, char** argv) {
         *network.GetAddress(), network.GetCidr(), gateway, NULL, interface);
   } else if (!strcmp(command, "del")) {
     if (argc < 3)
-      LOG_FATAL("need network address (in cidr format) to del");
+      LOG_FATAL("need interface and network address (in cidr format) to del");
 
     const char* device(argv[1]);
     Interface* interface(networking->GetInterface(device));
