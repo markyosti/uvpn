@@ -21,7 +21,6 @@ class NetlinkSocket::Message {
   virtual nlmsghdr* GetHeader() = 0;
   virtual bool ParseReply(OutputCursor* cursor);
 
-
   void AddAttribute(unsigned short attribute, uint32_t value) {
     AddAttribute(attribute, &value, sizeof(value));
   }
@@ -30,7 +29,7 @@ class NetlinkSocket::Message {
     rtattr* rta(reinterpret_cast<rtattr*>(((char *)header) + header->nlmsg_len));
 
     rta->rta_type = attribute;
-    rta->rta_len = RTA_LENGTH(data_size);
+    rta->rta_len = static_cast<unsigned short int>(RTA_LENGTH(data_size));
     memcpy(RTA_DATA(rta), data, data_size);
 
     header->nlmsg_len += RTA_ALIGN(RTA_LENGTH(data_size));
@@ -53,7 +52,8 @@ class NetlinkSocket::LinkMessage : public NetlinkSocket::Message {
     data_.ifinfo.ifi_change = ifi_change;
     data_.ifinfo.ifi_flags = ifi_flags;
 
-    AddAttribute(IFLA_IFNAME, ifname.c_str(), ifname.size() + 1);
+    AddAttribute(IFLA_IFNAME, ifname.c_str(),
+                 static_cast<unsigned short int>(ifname.size() + 1));
   }
 
   nlmsghdr* GetHeader() { return &data_.header; }
@@ -132,8 +132,8 @@ class NetlinkSocket::SetRoutesMessage : public NetlinkSocket::Message {
  public:
   SetRoutesMessage(
       uint16_t type, uint16_t flags, int seq, const IPAddress& network,
-      int cidr, const IPAddress* gateway, const IPAddress* source,
-      Interface* interface) {
+      unsigned short int cidr, const IPAddress* gateway,
+      const IPAddress* source, Interface* interface) {
     memset(&data_, 0, sizeof(data_));
 
     data_.header.nlmsg_len = NLMSG_LENGTH(sizeof(rtmsg));
@@ -142,8 +142,8 @@ class NetlinkSocket::SetRoutesMessage : public NetlinkSocket::Message {
     data_.header.nlmsg_seq = seq;
     data_.header.nlmsg_pid = getpid();
 
-    data_.routing.rtm_family = network.Family();
-    data_.routing.rtm_dst_len = cidr;
+    data_.routing.rtm_family = static_cast<unsigned char>(network.Family());
+    data_.routing.rtm_dst_len = static_cast<unsigned char>(cidr);
     data_.routing.rtm_table = RT_TABLE_MAIN;
     data_.routing.rtm_scope = RT_SCOPE_UNIVERSE;
     data_.routing.rtm_type = RTN_UNICAST;
@@ -154,7 +154,7 @@ class NetlinkSocket::SetRoutesMessage : public NetlinkSocket::Message {
 
     if (gateway) {
       DEBUG_FATAL_UNLESS(gateway->Family() == network.Family());
-      data_.routing.rtm_family = gateway->Family();
+      data_.routing.rtm_family = static_cast<unsigned char>(gateway->Family());
       AddAttribute(RTA_GATEWAY, gateway->GetRaw(), gateway->GetRawSize());
     } else {
       data_.routing.rtm_scope = RT_SCOPE_LINK;
@@ -351,7 +351,7 @@ bool RoutingTable::GetRoutes(list<RoutingEntry*>* entries) {
 }
 
 bool RoutingTable::AddRoute(
-    const IPAddress& network, int cidr, const IPAddress* gateway,
+    const IPAddress& network, short unsigned int cidr, const IPAddress* gateway,
     const IPAddress* source, Interface* interface) {
   NetlinkSocket::SetRoutesMessage message(
       RTM_NEWROUTE, NLM_F_ACK | NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE, socket_->GetSeq(),
@@ -360,7 +360,7 @@ bool RoutingTable::AddRoute(
 }
 
 bool RoutingTable::DelRoute(
-    const IPAddress& network, int cidr, const IPAddress* gateway,
+    const IPAddress& network, short unsigned int cidr, const IPAddress* gateway,
     const IPAddress* source, Interface* interface) {
   NetlinkSocket::SetRoutesMessage message(
       RTM_DELROUTE, NLM_F_ACK | NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE, socket_->GetSeq(),
@@ -382,7 +382,8 @@ bool NetlinkSocket::Recv(InputCursor* input) {
       continue;
     }
 
-    if (read < input->ContiguousSize()) {
+    // Note that read here cannot be a negative number.
+    if (static_cast<unsigned int>(read) < input->ContiguousSize()) {
       input->Increment(read);
       break;
     }
@@ -423,14 +424,14 @@ bool Interface::Disable() {
   return socket_->Chat(&message);
 }
 
-bool Interface::AddAddress(const IPAddress& address, int cidr) {
+bool Interface::AddAddress(const IPAddress& address, short unsigned int cidr) {
   NetlinkSocket::IfAddrMessage message(
       RTM_NEWADDR, NLM_F_REQUEST | NLM_F_CREATE | NLM_F_ACK | NLM_F_EXCL,
       socket_->GetSeq(), address, cidr, index_);
   return socket_->Chat(&message);
 }
 
-bool Interface::DelAddress(const IPAddress& address, int cidr) {
+bool Interface::DelAddress(const IPAddress& address, short unsigned int cidr) {
   NetlinkSocket::IfAddrMessage message(
       RTM_DELADDR, NLM_F_REQUEST | NLM_F_ACK,
       socket_->GetSeq(), address, cidr, index_);

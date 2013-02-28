@@ -42,8 +42,8 @@ class Interface {
   bool Enable();
   bool Disable();
 
-  bool AddAddress(const IPAddress& address, int cidr);
-  bool DelAddress(const IPAddress& address, int cidr);
+  bool AddAddress(const IPAddress& address, short unsigned int cidr);
+  bool DelAddress(const IPAddress& address, short unsigned int cidr);
 
   const string& GetName() const { return name_; }
   unsigned int GetIndex() const { return index_; }
@@ -81,11 +81,11 @@ class RoutingTable {
   RoutingTable(NetlinkSocket* socket);
 
   bool AddRoute(
-      const IPAddress& network, int cidr, const IPAddress* gateway,
-      const IPAddress* source, Interface* interface);
+      const IPAddress& network, short unsigned int cidr,
+      const IPAddress* gateway, const IPAddress* source, Interface* interface);
   bool DelRoute(
-      const IPAddress& network, int cidr, const IPAddress* gateway,
-      const IPAddress* source, Interface* interface);
+      const IPAddress& network, short unsigned int cidr,
+      const IPAddress* gateway, const IPAddress* source, Interface* interface);
 
   bool GetRoutes(list<RoutingEntry*>* entries);
 

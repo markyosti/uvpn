@@ -14,7 +14,7 @@ class IPAddress {
   virtual sa_family_t Family() const = 0;
 
   virtual const void* GetRaw() const = 0;
-  virtual int GetRawSize() const = 0;
+  virtual short unsigned int GetRawSize() const = 0;
 
   virtual Sockaddr* GetSockaddr(uint16_t port) const = 0;
   virtual string AsString() const = 0;
@@ -40,7 +40,7 @@ class InetAddress : public IPAddress {
   }
 
   const void* GetRaw() const { return &address_; }
-  int GetRawSize() const { return sizeof(ADDRESS); }
+  short unsigned int GetRawSize() const { return sizeof(ADDRESS); }
 
   virtual string AsString() const {
     char buffer[MAXLEN + 1];
